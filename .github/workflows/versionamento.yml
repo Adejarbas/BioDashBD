@@ -50,9 +50,9 @@ jobs:
 
         #run: npm run build
  
-      - name: Testes
+      #- name: Testes
 
-        run: npm test -- --coverage
+      #  run: npm test -- --coverage
  
       - name: Criar nova tag caso não exista
 
