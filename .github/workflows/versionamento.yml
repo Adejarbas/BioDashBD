@@ -46,9 +46,9 @@ jobs:
 
         run: npm install -g semver       
  
-      - name: Build
+      #- name: Build
 
-        run: npm run build
+        #run: npm run build
  
       - name: Testes
 
@@ -288,43 +288,43 @@ jobs:
  
       # Envio de e-mail EM CASO DE FALHA no pipeline
 
-      - name: Enviar email se falhar
+      #- name: Enviar email se falhar
 
-        if: failure()
+      #  if: failure()
 
-        uses: dawidd6/action-send-mail@v6
+      #  uses: dawidd6/action-send-mail@v6
 
-        with:
+      #  with:
 
-          server_address: smtp.gmail.com
+      #    server_address: smtp.gmail.com
 
-          server_port: 587
+      #    server_port: 587
 
-          secure: false
+      #    secure: false
 
-          username: ${{ secrets.EMAIL_USERNAME }}
+       #   username: ${{ secrets.EMAIL_USERNAME }}
 
-          password: ${{ secrets.EMAIL_PASSWORD }}
+        #  password: ${{ secrets.EMAIL_PASSWORD }}
 
-          subject: Falha pipeline Actions
+      #    subject: Falha pipeline Actions
 
-          to: fe.dsm.vot.001@gmail.com
+      #    to: fe.dsm.vot.001@gmail.com
 
-          from: ${{ secrets.EMAIL_USERNAME }}
+       #   from: ${{ secrets.EMAIL_USERNAME }}
 
-          body: |
+        #  body: |
 
-            A execução falhou.
+         #   A execução falhou.
 
-            Repositório: ${{ github.repository }}
+          #  Repositório: ${{ github.repository }}
 
-            Commit: ${{ github.sha }}
+           # Commit: ${{ github.sha }}
 
-            Workflow: ${{ github.workflow }}
+            #Workflow: ${{ github.workflow }}
 
-            Job: ${{ github.job }}
+          #  Job: ${{ github.job }}
 
-            Veja os logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+           # Veja os logs: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
 # Cadastrar os dados para envio de e-mail e recupera-los aqui 
 
