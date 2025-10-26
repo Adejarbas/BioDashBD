@@ -1,10 +1,16 @@
+export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.SECRET_STRIPE_KEY || 'sk_test_51RyHV1GskFwcCjBHKHrjtCMX3BXKH2EYmqdxIQk5pttNVQEhoD4Mf0daZXAWY2Qelo22MA52oY0PivzkU2EwYESw00Qjs2gux4', {
-  apiVersion: '2025-08-27.basil',
+const env = (typeof globalThis !== "undefined" && (globalThis as any).process && (globalThis as any).process.env)
+  ? (globalThis as any).process.env
+  : ({} as Record<string, string | undefined>);
+
+// Use as chaves do ambiente (não exponha chaves secretas no repositório).
+const stripe = new Stripe(env.STRIPE_SECRET_KEY || env.SECRET_STRIPE_KEY || '', {
+  apiVersion: '2025-08-27.basil' as any,
 });
 
 export async function POST(req: NextRequest) {
@@ -35,8 +41,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'payment',
-  success_url: 'http://localhost:3000/dashboard',
-  cancel_url: 'http://localhost:3000',
+  success_url: 'http://localhost:3001/dashboard',
+  cancel_url: 'http://localhost:3001',
       customer_email: user.email,
     });
     return NextResponse.json({ url: session.url });

@@ -4,6 +4,10 @@ import { createServerActionClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 
+const env = (typeof globalThis !== "undefined" && (globalThis as any).process && (globalThis as any).process.env)
+  ? (globalThis as any).process.env
+  : ({} as Record<string, string | undefined>)
+
 // Update the signIn function to handle redirects properly
 export async function signIn(prevState: any, formData: FormData) {
   // Check if formData is valid
@@ -64,8 +68,8 @@ export async function signUp(prevState: any, formData: FormData) {
       password: password.toString(),
       options: {
         emailRedirectTo:
-          process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
-          `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/dashboard`,
+          env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ||
+          `${env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/dashboard`,
         data: {
           email_confirm: true, // This helps bypass email confirmation in some cases
         },

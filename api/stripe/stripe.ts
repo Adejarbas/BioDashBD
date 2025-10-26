@@ -3,8 +3,12 @@ import Stripe from 'stripe';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.SECRET_STRIPE_KEY || 'sk_test_51RyHV1GskFwcCjBHKHrjtCMX3BXKH2EYmqdxIQk5pttNVQEhoD4Mf0daZXAWY2Qelo22MA52oY0PivzkU2EwYESw00Qjs2gux4', {
-  apiVersion: '2025-07-30.basil',
+const env = (typeof globalThis !== "undefined" && (globalThis as any).process && (globalThis as any).process.env)
+  ? (globalThis as any).process.env
+  : ({} as Record<string, string | undefined>);
+
+const stripe = new Stripe(env.STRIPE_SECRET_KEY || env.SECRET_STRIPE_KEY || '', {
+  apiVersion: '2025-07-30.basil' as any,
 });
 
 export async function POST(req: NextRequest) {

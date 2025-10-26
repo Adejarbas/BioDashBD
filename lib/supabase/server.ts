@@ -2,12 +2,16 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import { cache } from "react"
 
+const env = (typeof globalThis !== "undefined" && (globalThis as any).process && (globalThis as any).process.env)
+  ? (globalThis as any).process.env
+  : ({} as Record<string, string | undefined>)
+
 // Check if Supabase environment variables are available
 export const isSupabaseConfigured =
-  typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
-  process.env.NEXT_PUBLIC_SUPABASE_URL.length > 0 &&
-  typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string" &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0
+  typeof env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
+  env.NEXT_PUBLIC_SUPABASE_URL!.length > 0 &&
+  typeof env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string" &&
+  env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.length > 0
 
 // Create a cached version of the Supabase client for Server Components
 export const createClient = cache(() => {
