@@ -7,7 +7,9 @@
     "lib": "lib"
   },
   "scripts": {
-    "start": "node api/index.js",
+    "dev": "next dev -p 3003",
+    "build": "next build",
+    "start": "next start -p 3002",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,20 +19,22 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/Adejarbas/BioDashBD/issues"
   },
   "homepage": "https://github.com/Adejarbas/BioDashBD#readme",
   "dependencies": {
     "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.76.1",
     "cors": "^2.8.5",
     "next": "^16.0.0",
-    "stripe": "^19.1.0"
+    "stripe": "^19.1.0",
+    "supabase": "^2.54.11"
   },
   "devDependencies": {
     "@types/node": "^24.9.1",
-    "@types/react": "^19.2.2"
+    "@types/react": "^19.2.2",
+    "typescript": "5.9.3"
   }
 }

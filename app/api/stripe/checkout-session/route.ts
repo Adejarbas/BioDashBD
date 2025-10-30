@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
@@ -7,11 +8,13 @@ const env = (typeof globalThis !== "undefined" && (globalThis as any).process &&
   ? (globalThis as any).process.env
   : ({} as Record<string, string | undefined>);
 
-const stripe = new Stripe(env.STRIPE_SECRET_KEY || env.SECRET_STRIPE_KEY || '', {
-  apiVersion: '2025-07-30.basil' as any,
-});
+// Use as chaves do ambiente (não exponha chaves secretas no repositório).
+const stripe = new Stripe(env.STRIPE_SECRET_KEY || env.SECRET_STRIPE_KEY || '');
 
 export async function POST(req: NextRequest) {
+  if (!env.STRIPE_SECRET_KEY && !env.SECRET_STRIPE_KEY) {
+    return NextResponse.json({ error: 'Stripe não configurado' }, { status: 501 })
+  }
   // Autenticação via Supabase usando cookies (App Router)
   const supabase = createRouteHandlerClient({ cookies });
   const {
@@ -39,8 +42,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: 'http://localhost:3000',
-      cancel_url: 'http://localhost:3000',
+      success_url: `${(env.FRONTEND_URL || 'http://localhost:3001')}/dashboard`,
+      cancel_url: `${env.FRONTEND_URL || 'http://localhost:3001'}`,
       customer_email: user.email,
     });
     return NextResponse.json({ url: session.url });
@@ -48,3 +51,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+

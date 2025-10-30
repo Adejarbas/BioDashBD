@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server"
 
 function formatTimestamp(timestamp: string): string {
   const now = new Date()
@@ -22,6 +22,9 @@ function formatTimestamp(timestamp: string): string {
 // GET - Retrieve activities
 export async function GET(request: NextRequest) {
   try {
+    if (!isSupabaseConfigured) {
+      return NextResponse.json({ success: true, data: [], total: 0 })
+    }
     const supabase = createClient()
 
     // Get authenticated user
@@ -53,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("Database error:", error)
-      return NextResponse.json({ success: false, error: "Failed to fetch activities" }, { status: 500 })
+      return NextResponse.json({ success: true, data: [], total: 0 })
     }
 
     // Format activities with relative timestamps
@@ -76,6 +79,9 @@ export async function GET(request: NextRequest) {
 // POST - Add new activity
 export async function POST(request: NextRequest) {
   try {
+    if (!isSupabaseConfigured) {
+      return NextResponse.json({ success: false, error: "Supabase não configurado" }, { status: 501 })
+    }
     const supabase = createClient()
 
     // Get authenticated user
@@ -123,3 +129,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to add activity" }, { status: 500 })
   }
 }
+
+
