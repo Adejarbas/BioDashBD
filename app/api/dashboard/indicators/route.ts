@@ -1,3 +1,4 @@
+export const runtime = 'nodejs';
 import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase/client"
 
@@ -24,3 +25,5 @@ export async function GET() {
     return NextResponse.json({ error: "Failed to fetch indicators" }, { status: 500 })
   }
 }
+
+
