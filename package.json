@@ -27,10 +27,12 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.76.1",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
     "next": "^16.0.0",
     "stripe": "^19.1.0",
-    "supabase": "^2.54.11"
+    "supabase": "^2.54.11",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@types/node": "^24.9.1",
