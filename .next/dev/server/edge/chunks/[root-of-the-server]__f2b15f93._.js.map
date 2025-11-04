@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 16, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/middleware.ts"],"sourcesContent":["import { NextResponse, type NextRequest } from 'next/server'\r\n\r\n// Este middleware apenas passa a requisição adiante.\r\n// Vamos colocar o 'runtime' na própria rota de API.\r\nexport function middleware(request: NextRequest) {\r\n  return NextResponse.next()\r\n}\r\n\r\n// Isso garante que o middleware só rode nas rotas de API\r\nexport const config = {\r\n  matcher: '/api/:path*',\r\n}"],"names":[],"mappings":";;;;;;AAAA;AAAA;;AAIO,SAAS,WAAW,OAAoB;IAC7C,OAAO,gMAAY,CAAC,IAAI;AAC1B;AAGO,MAAM,SAAS;IACpB,SAAS;AACX"}}]
+}

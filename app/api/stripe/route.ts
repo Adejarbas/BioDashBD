@@ -35,8 +35,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${env.FRONTEND_URL || 'http://localhost:3001'}`,
-      cancel_url: `${env.FRONTEND_URL || 'http://localhost:3001'}`,
+      success_url: `${env.FRONTEND_URL || 'http://localhost:3000'}`,
+      cancel_url: `${env.FRONTEND_URL || 'http://localhost:3000'}`,
       customer_email: user.email,
     });
     return NextResponse.json({ url: session.url });
