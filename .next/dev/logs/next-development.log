@@ -1,0 +1,38 @@
+[00:00:01.973] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:02.280] Server  LOG      ✓ Ready in 1791ms
+[00:00:08.840] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:00:08.857] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:00:08.870] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:00:08.890] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:00:08.910] Server  ERROR    ⨯ "unhandledRejection:" TypeError: nextCookies.get is not a function
+[00:00:08.927] Server  ERROR    ⨯ "unhandledRejection: " TypeError: nextCookies.get is not a function
+[00:00:15.580] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:00:15.598] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:00:15.611] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:00:15.630] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:00:15.650] Server  ERROR    ⨯ "unhandledRejection:" TypeError: nextCookies.get is not a function
+[00:00:15.662] Server  ERROR    ⨯ "unhandledRejection: " TypeError: nextCookies.get is not a function
+[00:00:35.773] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:00:35.793] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:00:35.815] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:00:35.854] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:00:35.870] Server  ERROR    ⨯ "unhandledRejection:" TypeError: nextCookies.get is not a function
+[00:00:35.899] Server  ERROR    ⨯ "unhandledRejection: " TypeError: nextCookies.get is not a function
+[00:00:37.144] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:00:37.161] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:00:37.182] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:00:37.212] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:00:37.232] Server  ERROR    ⨯ "unhandledRejection:" TypeError: nextCookies.get is not a function
+[00:00:37.254] Server  ERROR    ⨯ "unhandledRejection: " TypeError: nextCookies.get is not a function
+[00:06:24.167] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:06:24.193] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:06:24.212] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:06:24.238] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:06:24.260] Server  ERROR    ⨯ "unhandledRejection:" TypeError: nextCookies.get is not a function
+[00:06:24.285] Server  ERROR    ⨯ "unhandledRejection: " TypeError: nextCookies.get is not a function
+[00:06:25.017] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:06:25.050] Server  WARN    Error: Route "/api/stripe/checkout-session" used `cookies().get`. `cookies()` returns a Promise and must be unwrapped with `await` or `React.use()` before accessing its properties. Learn more: https://nextjs.org/docs/messages/sync-dynamic-apis
+[00:06:25.071] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:06:25.108] Server  ERROR   TypeError: nextCookies.get is not a function
+[00:06:25.132] Server  ERROR    ⨯ "unhandledRejection:" TypeError: nextCookies.get is not a function
+[00:06:25.175] Server  ERROR    ⨯ "unhandledRejection: " TypeError: nextCookies.get is not a function

@@ -1,1 +1,4 @@
-{}
+{
+  "/api/stripe/checkout-session/route": "app/api/stripe/checkout-session/route.js",
+  "/api/user/route": "app/api/user/route.js"
+}
