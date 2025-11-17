@@ -1,12 +1,23 @@
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { createMiddlewareClient } from "./lib/supabase/middlewareClient";
 
-// Este middleware apenas passa a requisição adiante.
-// Vamos colocar o 'runtime' na própria rota de API.
-export function middleware(request: NextRequest) {
-  return NextResponse.next()
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = createMiddlewareClient(req, res);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // proteger dashboard
+  if (!user && req.nextUrl.pathname.startsWith("/dashboard")) {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
+  return res;
 }
 
-// Isso garante que o middleware só rode nas rotas de API
 export const config = {
-  matcher: '/api/:path*',
-}
+  matcher: ["/dashboard/:path*", "/api/user"],
+};

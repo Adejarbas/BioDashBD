@@ -1,53 +1,25 @@
-import { NextResponse } from "next/server"
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
-// In a real application, you would validate against your database
-// This is a simplified example with a hardcoded test user
-const TEST_USER = {
-  id: 1,
-  email: "test@example.com",
-  password: "password123", // In a real app
-  name: "Test User",
-}
+export async function POST(req: Request) {
+  const { email, password } = await req.json();
+  const supabase = createClient();
 
-// For this demo, we'll use a simple token generation approach
-// In a real app, you would use a proper JWT library with environment variables
-function generateSimpleToken(payload: any) {
-  // Base64 encode the payload
-  const encodedPayload = Buffer.from(JSON.stringify(payload)).toString("base64")
-  // In a real app, you would sign this with a secret key
-  return `DEMO.${encodedPayload}.SIGNATURE`
-}
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json()
-    const { email, password } = body
-
-    // Check if the user exists and password matches
-    if (email === TEST_USER.email && password === TEST_USER.password) {
-      // Create a simple token
-      const token = generateSimpleToken({
-        id: TEST_USER.id,
-        email: TEST_USER.email,
-        name: TEST_USER.name,
-      })
-
-      return NextResponse.json({
-        success: true,
-        token,
-        user: {
-          id: TEST_USER.id,
-          email: TEST_USER.email,
-          name: TEST_USER.name,
-        },
-      })
-    }
-
-    return NextResponse.json({ success: false, message: "Invalid credentials" }, { status: 401 })
-  } catch (error) {
-    console.error("Login error:", error)
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 })
+  if (error) {
+    return NextResponse.json(
+      { success: false, message: error.message },
+      { status: 400 }
+    );
   }
+
+  // Retornar só dados mínimos para o front
+  return NextResponse.json(
+    { success: true, userId: data.user?.id || null },
+    { status: 200 }
+  );
 }
-
-
