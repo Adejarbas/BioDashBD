@@ -1,22 +1,11 @@
-import { createBrowserClient } from '@supabase/ssr'
 
-// Check if Supabase environment variables are available
-export const isSupabaseConfigured =
-  typeof process.env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
-  process.env.NEXT_PUBLIC_SUPABASE_URL!.length > 0 &&
-  typeof process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string" &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.length > 0
+import { createBrowserClient } from "@supabase/ssr";
 
-export function createClient() {
-  if (!isSupabaseConfigured) {
-    throw new Error("Supabase is not configured. Please check your environment variables.")
-  }
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
-
-// Export a default instance for convenience
-export const supabase = isSupabaseConfigured ? createClient() : null
+export const createClient = () =>
+  createBrowserClient(
+    supabaseUrl!,
+    supabaseKey!,
+  );

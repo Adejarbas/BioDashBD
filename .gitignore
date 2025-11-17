@@ -2,7 +2,9 @@
 .node_modules
 ENV_VARS.md
 .env
+.next
 
 #teste
 .vercel
 node_modules
+.next

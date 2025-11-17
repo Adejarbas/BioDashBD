@@ -5,7 +5,7 @@ import { NextResponse } from "next/server"
 const TEST_USER = {
   id: 1,
   email: "test@example.com",
-  password: "password123", // In a real app, this would be hashed
+  password: "password123", // In a real app
   name: "Test User",
 }
 
