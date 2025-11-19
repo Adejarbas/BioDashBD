@@ -1,24 +1,52 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
-export function createClient() {
+export const isSupabaseConfigured = !!(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
+/**
+ * Configuração padrão de cookies para Supabase
+ */
+export function getCookieOptions(options?: CookieOptions): CookieOptions {
+  return {
+    ...options,
+    path: "/",
+    sameSite: "lax" as const,
+    httpOnly: options?.httpOnly ?? false,
+  };
+}
+
+/**
+ * Helper para configurar cookies do Supabase
+ */
+export function createCookieHandlers(cookieStore: ReadonlyRequestCookies) {
+  return {
+    getAll() {
+      return cookieStore.getAll();
+    },
+    setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+      try {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookieStore.set(name, value, getCookieOptions(options));
+        });
+      } catch (error) {
+        // Cookies são automaticamente persistidos no App Router
+      }
+    },
+  };
+}
+
+export async function createClient() {
   const cookieStore = await cookies();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          cookieStore.set(name, value, { ...options, path: "/" });
-        },
-        remove(name: string, options: CookieOptions) {
-          cookieStore.set(name, "", { ...options, path: "/" });
-        },
-      },
+      cookies: createCookieHandlers(cookieStore),
     }
   );
 }

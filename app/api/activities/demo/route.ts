@@ -1,19 +1,23 @@
 import { type NextRequest, NextResponse } from "next/server"
+import {
+  successResponse,
+  errorResponse,
+} from "@/lib/api-response"
 
 // Demo endpoint to manually trigger activities for testing
 export async function POST(request: NextRequest) {
   try {
     const demoActivities = [
-      { type: "success", message: "Biodigestor atingiu temperatura ideal de operação" },
-      { type: "info", message: "Processamento de 500kg de resíduos orgânicos iniciado" },
-      { type: "warning", message: "Nível de metano acima do esperado - verificar ventilação" },
-      { type: "success", message: "Geração de energia elétrica aumentou 8% na última hora" },
-      { type: "info", message: "Sistema de monitoramento atualizado para versão 2.1" },
-      { type: "warning", message: "Sensor de umidade reportando valores inconsistentes" },
-      { type: "success", message: "Manutenção preventiva concluída com sucesso" },
-      { type: "error", message: "Falha temporária na comunicação com sensor de pressão" },
-      { type: "info", message: "Backup automático dos dados realizado" },
-      { type: "success", message: "Eficiência do sistema otimizada - economia de 12%" },
+      { type: "success", description: "Biodigestor atingiu temperatura ideal de operação" },
+      { type: "info", description: "Processamento de 500kg de resíduos orgânicos iniciado" },
+      { type: "warning", description: "Nível de metano acima do esperado - verificar ventilação" },
+      { type: "success", description: "Geração de energia elétrica aumentou 8% na última hora" },
+      { type: "info", description: "Sistema de monitoramento atualizado para versão 2.1" },
+      { type: "warning", description: "Sensor de umidade reportando valores inconsistentes" },
+      { type: "success", description: "Manutenção preventiva concluída com sucesso" },
+      { type: "error", description: "Falha temporária na comunicação com sensor de pressão" },
+      { type: "info", description: "Backup automático dos dados realizado" },
+      { type: "success", description: "Eficiência do sistema otimizada - economia de 12%" },
     ]
 
     const randomActivity = demoActivities[Math.floor(Math.random() * demoActivities.length)]
@@ -29,17 +33,21 @@ export async function POST(request: NextRequest) {
 
     if (response.ok) {
       const result = await response.json()
-      return NextResponse.json({
-        success: true,
-        message: "Demo activity created successfully",
-        data: result.data,
-      })
+      if (result.success && result.data) {
+        return successResponse(result.data, "Demo activity created successfully")
+      } else {
+        return errorResponse("Failed to create demo activity", 500)
+      }
     } else {
-      throw new Error("Failed to create demo activity")
+      const errorData = await response.json().catch(() => ({}))
+      return errorResponse(
+        errorData.error || "Failed to create demo activity",
+        response.status
+      )
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating demo activity:", error)
-    return NextResponse.json({ success: false, error: "Failed to create demo activity" }, { status: 500 })
+    return errorResponse("Failed to create demo activity", 500)
   }
 }
 

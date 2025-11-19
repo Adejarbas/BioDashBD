@@ -1,5 +1,14 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createClient, isSupabaseConfigured } from "@/lib/supabase/server"
+import { type NextRequest } from "next/server"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import { isSupabaseConfigured } from "@/lib/supabase/server"
+import {
+  successResponse,
+  unauthorizedResponse,
+  errorResponse,
+} from "@/lib/api-response"
+
+// --- FUNÇÃO DE FORMATAÇÃO DE DATA (Sem alterações) ---
 
 function formatTimestamp(timestamp: string): string {
   const now = new Date()
@@ -19,26 +28,70 @@ function formatTimestamp(timestamp: string): string {
   return activityTime.toLocaleDateString("pt-BR")
 }
 
-// GET - Retrieve activities
+// --- FUNÇÃO AUXILIAR REATORADA PARA AUTH ---
+
+/**
+ * Cria um cliente Supabase server-side e obtém o usuário autenticado.
+ * Encapsula a lógica de cookies e autenticação para reuso.
+ */
+async function getSupabaseClientAndUser() {
+  
+  const cookieStore = await cookies() 
+  
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              // A função set() funciona em API Routes para definir cookies na resposta
+              cookieStore.set(name, value, { ...options, path: "/" })
+            })
+          } catch (error) {
+            // Log de erro pode ser útil aqui se houver problemas
+            // console.error("Falha ao definir cookie:", error)
+          }
+        },
+      },
+    }
+  )
+
+  // Obtém o usuário
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  return { supabase, user, authError }
+}
+
+// --- HANDLER GET (Refatorado) ---
+
 export async function GET(request: NextRequest) {
   try {
     if (!isSupabaseConfigured) {
-      return NextResponse.json({ success: true, data: [], total: 0 })
+      return successResponse({ activities: [], total: 0 }, "Activities retrieved successfully")
     }
-    const supabase = createClient()
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    // Bloco de autenticação refatorado
+    const { supabase, user, authError } = await getSupabaseClientAndUser()
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
+      return unauthorizedResponse("Unauthorized")
     }
 
     const url = new URL(request.url)
-    const limit = Number.parseInt(url.searchParams.get("limit") || "10")
+    const limitParam = url.searchParams.get("limit")
+    const limit = limitParam ? Number.parseInt(limitParam) : 10
     const since = url.searchParams.get("since")
+
+    if (limitParam && (isNaN(limit) || limit < 1 || limit > 100)) {
+      return errorResponse("Limit must be a number between 1 and 100", 400)
+    }
 
     let query = supabase
       .from("activities")
@@ -47,8 +100,11 @@ export async function GET(request: NextRequest) {
       .order("timestamp", { ascending: false })
       .limit(limit)
 
-    // Filter by timestamp if 'since' parameter is provided
     if (since) {
+      const sinceDate = new Date(since)
+      if (isNaN(sinceDate.getTime())) {
+        return errorResponse("Invalid 'since' date format. Use ISO 8601 format", 400)
+      }
       query = query.gt("timestamp", since)
     }
 
@@ -56,78 +112,85 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("Database error:", error)
-      return NextResponse.json({ success: true, data: [], total: 0 })
+      // Retorna sucesso com lista vazia em caso de erro de DB, como no original
+      return successResponse({ activities: [], total: 0 }, "Activities retrieved successfully")
     }
 
-    // Format activities with relative timestamps
     const formattedActivities = (activities || []).map((activity) => ({
       ...activity,
       timestamp: formatTimestamp(activity.timestamp),
     }))
 
-    return NextResponse.json({
-      success: true,
-      data: formattedActivities,
-      total: formattedActivities.length,
-    })
-  } catch (error) {
+    return successResponse(
+      {
+        activities: formattedActivities,
+        total: formattedActivities.length,
+      },
+      "Activities retrieved successfully"
+    )
+  } catch (error: any) {
     console.error("Error fetching activities:", error)
-    return NextResponse.json({ success: false, error: "Failed to fetch activities" }, { status: 500 })
+    return errorResponse("Failed to fetch activities", 500)
   }
 }
 
-// POST - Add new activity
+// --- HANDLER POST (Refatorado) ---
+
 export async function POST(request: NextRequest) {
   try {
     if (!isSupabaseConfigured) {
-      return NextResponse.json({ success: false, error: "Supabase não configurado" }, { status: 501 })
+      return errorResponse("Supabase not configured", 501)
     }
-    const supabase = createClient()
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
+    // Bloco de autenticação refatorado
+    const { supabase, user, authError } = await getSupabaseClientAndUser()
     if (authError || !user) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
+      return unauthorizedResponse("Unauthorized")
     }
 
     const body = await request.json()
     const { type, description } = body
 
-    // Validate required fields
     if (!type || !description) {
-      return NextResponse.json({ success: false, error: "Type and description are required" }, { status: 400 })
+      return errorResponse("Type and description are required", 400)
+    }
+    if (typeof type !== "string" || type.trim().length === 0) {
+      return errorResponse("Type must be a non-empty string", 400)
+    }
+    if (typeof description !== "string" || description.trim().length === 0) {
+      return errorResponse("Description must be a non-empty string", 400)
+    }
+    if (description.trim().length > 500) {
+      return errorResponse("Description must be less than 500 characters", 400)
     }
 
     const { data: newActivity, error } = await supabase
       .from("activities")
       .insert({
         user_id: user.id,
-        type,
-        description,
+        type: type.trim(),
+        description: description.trim(),
       })
       .select()
       .single()
 
     if (error) {
       console.error("Database error:", error)
-      return NextResponse.json({ success: false, error: "Failed to add activity" }, { status: 500 })
+      return errorResponse("Failed to add activity", 500)
     }
 
-    return NextResponse.json({
-      success: true,
-      data: {
+    return successResponse(
+      {
         ...newActivity,
         timestamp: formatTimestamp(newActivity.timestamp),
       },
-      message: "Activity added successfully",
-    })
-  } catch (error) {
+      "Activity added successfully"
+    )
+  } catch (error: any) {
     console.error("Error adding activity:", error)
-    return NextResponse.json({ success: false, error: "Failed to add activity" }, { status: 500 })
+    if (error instanceof SyntaxError) {
+      return errorResponse("Invalid request body", 400)
+    }
+    return errorResponse("Failed to add activity", 500)
   }
 }
-
-
