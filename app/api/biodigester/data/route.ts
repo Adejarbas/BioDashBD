@@ -1,10 +1,35 @@
 export const runtime = 'nodejs';
-import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
+import {
+  successResponse,
+  unauthorizedResponse,
+  errorResponse,
+} from "@/lib/api-response"
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const supabase = createClient()
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, { ...options, path: "/" });
+              });
+            } catch (error) {
+              // Cookies são automaticamente persistidos no App Router
+            }
+          },
+        },
+      }
+    )
 
     // Get authenticated user
     const {
@@ -12,7 +37,7 @@ export async function GET(request: Request) {
       error: authError,
     } = await supabase.auth.getUser()
     if (authError || !user) {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 })
+      return unauthorizedResponse("Unauthorized")
     }
 
     const { data: biodigesterData, error } = await supabase
@@ -24,7 +49,7 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error("Database error:", error)
-      return NextResponse.json({ success: false, message: "Failed to fetch data" }, { status: 500 })
+      return errorResponse("Failed to fetch biodigester data", 500)
     }
 
     // Process data for charts
@@ -67,13 +92,10 @@ export async function GET(request: Request) {
       },
     }
 
-    return NextResponse.json({
-      success: true,
-      data: processedData,
-    })
-  } catch (error) {
-    console.error("Auth error:", error)
-    return NextResponse.json({ success: false, message: "Internal server error" }, { status: 500 })
+    return successResponse(processedData, "Biodigester data retrieved successfully")
+  } catch (error: any) {
+    console.error("Biodigester data error:", error)
+    return errorResponse("Internal server error", 500)
   }
 }
 

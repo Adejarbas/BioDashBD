@@ -1,45 +1,52 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
-const env = process.env
+export const isSupabaseConfigured = !!(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
-// Verifica se variáveis do Supabase existem
-export const isSupabaseConfigured =
-  typeof env.NEXT_PUBLIC_SUPABASE_URL === "string" &&
-  env.NEXT_PUBLIC_SUPABASE_URL.length > 0 &&
-  typeof env.NEXT_PUBLIC_SUPABASE_ANON_KEY === "string" &&
-  env.NEXT_PUBLIC_SUPABASE_ANON_KEY.length > 0
+/**
+ * Configuração padrão de cookies para Supabase
+ */
+export function getCookieOptions(options?: CookieOptions): CookieOptions {
+  return {
+    ...options,
+    path: "/",
+    sameSite: "lax" as const,
+    httpOnly: options?.httpOnly ?? false,
+  };
+}
+
+/**
+ * Helper para configurar cookies do Supabase
+ */
+export function createCookieHandlers(cookieStore: ReadonlyRequestCookies) {
+  return {
+    getAll() {
+      return cookieStore.getAll();
+    },
+    setAll(cookiesToSet: Array<{ name: string; value: string; options?: CookieOptions }>) {
+      try {
+        cookiesToSet.forEach(({ name, value, options }) => {
+          cookieStore.set(name, value, getCookieOptions(options));
+        });
+      } catch (error) {
+        // Cookies são automaticamente persistidos no App Router
+      }
+    },
+  };
+}
 
 export async function createClient() {
-  if (!isSupabaseConfigured) {
-    throw new Error("Supabase not configured. Check environment variables.")
-  }
-
-  const cookieStore = await cookies()
+  const cookieStore = await cookies();
 
   return createServerClient(
-    env.NEXT_PUBLIC_SUPABASE_URL!,
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      cookies: {
-        async get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-        async set(name: string, value: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value, ...options })
-          } catch (error) {
-            
-          }
-        },
-        async remove(name: string, options: CookieOptions) {
-          try {
-            cookieStore.set({ name, value: '', ...options })
-          } catch (error) {
-            
-          }
-        },
-      },
+      cookies: createCookieHandlers(cookieStore),
     }
-  )
+  );
 }

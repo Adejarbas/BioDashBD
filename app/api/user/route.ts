@@ -1,40 +1,42 @@
-export const runtime = "nodejs";
-import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { createCookieHandlers } from "@/lib/supabase/server";
+import {
+  successResponse,
+  unauthorizedResponse,
+  errorResponse,
+} from "@/lib/api-response";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const supabase = createClient();
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: createCookieHandlers(cookieStore),
+      }
+    );
 
-    // Obter usuário autenticado corretamente (SSR)
     const { data, error: authError } = await supabase.auth.getUser();
 
     if (authError || !data?.user) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
+      return unauthorizedResponse("Unauthorized");
     }
 
     const user = data.user;
 
-    // Buscar perfil do usuário na tabela "users"
     const { data: userProfile, error } = await supabase
       .from("users")
       .select("*")
       .eq("id", user.id)
       .single();
 
-    // Se erro for diferente de "no rows returned"
     if (error && error.code !== "PGRST116") {
       console.error("Database error:", error);
-      return NextResponse.json(
-        { success: false, message: "Failed to fetch user data" },
-        { status: 500 }
-      );
+      return errorResponse("Failed to fetch user data", 500);
     }
 
-    // Caso não exista perfil, devolver objeto padrão
     const userData =
       userProfile ||
       {
@@ -47,76 +49,9 @@ export async function GET(request: Request) {
         profile_image_url: null,
       };
 
-    return NextResponse.json({
-      success: true,
-      user: userData,
-    });
-  } catch (error) {
+    return successResponse(userData, "User data retrieved successfully");
+  } catch (error: any) {
     console.error("Auth error:", error);
-    return NextResponse.json(
-      { success: false, message: "Internal server error" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function PUT(request: Request) {
-  try {
-    const supabase = createClient();
-
-    // Obter usuário autenticado
-    const { data, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !data?.user) {
-      return NextResponse.json(
-        { success: false, message: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const user = data.user;
-
-    // Ler JSON enviado no body
-    const body = await request.json();
-    const { full_name, company_name, address, phone, profile_image_url } = body;
-
-    // Atualizar/Inserir o perfil do usuário
-    const { data: updated, error } = await supabase
-      .from("users")
-      .upsert(
-        {
-          id: user.id,
-          email: user.email,
-          full_name,
-          company_name,
-          address,
-          phone,
-          profile_image_url,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" }
-      )
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Database error:", error);
-      return NextResponse.json(
-        { success: false, message: "Failed to update user data" },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      user: updated,
-      message: "Profile updated successfully",
-    });
-  } catch (error) {
-    console.error("Update error:", error);
-    return NextResponse.json(
-      { success: false, message: "Internal server error" },
-      { status: 500 }
-    );
+    return errorResponse("Internal server error", 500);
   }
 }
