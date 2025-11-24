@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     );
 
     const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim().toLowerCase(),
+      email: email.trim(),
       password,
     });
 
