@@ -1,0 +1,776 @@
+openapi: 3.0.3
+info:
+  title: BioDashBD API
+  description: |
+    API completa do backend BioDashBD para gerenciamento de biodigestores, autenticação, atividades e pagamentos.
+    
+    ## Autenticação
+    Esta API utiliza autenticação baseada em cookies via Supabase. Após fazer login com sucesso através do endpoint `/api/auth/login`, um cookie de sessão será automaticamente definido no navegador.
+    
+    **Importante**: Todas as requisições para rotas protegidas devem incluir a opção `credentials: 'include'` no fetch para enviar os cookies de autenticação.
+    
+    ## URLs Base
+    - **Desenvolvimento**: `http://localhost:3003`
+    - **Frontend**: `http://localhost:3001`
+    
+  version: 1.0.0
+  contact:
+    name: Equipe BioDashBD
+    email: contato@biodashbd.com
+  license:
+    name: ISC
+
+servers:
+  - url: http://localhost:3003
+    description: Servidor de desenvolvimento
+  - url: http://localhost:3000
+    description: Servidor de produção (alternativo)
+
+tags:
+  - name: Autenticação
+    description: Endpoints para login, registro e logout de usuários
+  - name: Usuário
+    description: Gerenciamento de dados do usuário autenticado
+  - name: Atividades
+    description: Gerenciamento de atividades e eventos do sistema
+  - name: Biodigestor
+    description: Dados e estatísticas dos biodigestores
+  - name: Dashboard
+    description: Indicadores e métricas do painel de controle
+  - name: Pagamentos
+    description: Integração com Stripe para processamento de pagamentos
+
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Autenticação
+      summary: Realizar login
+      description: Autentica um usuário com email e senha, criando uma sessão via cookie do Supabase.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email do usuário
+                  example: usuario@exemplo.com
+                password:
+                  type: string
+                  format: password
+                  description: Senha do usuário
+                  example: SenhaSegura123!
+      responses:
+        '200':
+          description: Login realizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Login successful
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                        example: 550e8400-e29b-41d4-a716-446655440000
+                      email:
+                        type: string
+                        format: email
+                        example: usuario@exemplo.com
+                      redirectTo:
+                        type: string
+                        example: /dashboard
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Invalid email or password
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/auth/signup:
+    post:
+      tags:
+        - Autenticação
+      summary: Criar nova conta
+      description: Registra um novo usuário no sistema. O usuário receberá um email de confirmação.
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - full_name
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: Email do usuário
+                  example: novousuario@exemplo.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  description: |
+                    Senha do usuário. Deve conter:
+                    - Mínimo de 8 caracteres
+                    - Pelo menos uma letra maiúscula
+                    - Pelo menos uma letra minúscula
+                    - Pelo menos um número
+                    - Pelo menos um caractere especial
+                  example: SenhaForte123!
+                full_name:
+                  type: string
+                  minLength: 2
+                  description: Nome completo do usuário
+                  example: João Silva
+                company_name:
+                  type: string
+                  description: Nome da empresa (opcional)
+                  example: BioDash Ltda
+      responses:
+        '200':
+          description: Conta criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Account created successfully! Please check your email to confirm your account.
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                      email:
+                        type: string
+                        format: email
+                      emailConfirmed:
+                        type: boolean
+                        example: false
+        '400':
+          description: Erro na criação da conta (ex: email já existe)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Autenticação
+      summary: Realizar logout
+      description: Encerra a sessão do usuário autenticado, removendo os cookies de autenticação.
+      operationId: logout
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Logout realizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Signed out successfully
+                  data:
+                    type: object
+                    nullable: true
+                    example: null
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/user:
+    get:
+      tags:
+        - Usuário
+      summary: Obter dados do usuário autenticado
+      description: Retorna informações básicas do usuário atualmente logado.
+      operationId: getUser
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Dados do usuário obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      userId:
+                        type: string
+                        format: uuid
+                        example: 550e8400-e29b-41d4-a716-446655440000
+                      email:
+                        type: string
+                        format: email
+                        example: usuario@exemplo.com
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Usuário
+      summary: Método não permitido
+      description: Este endpoint não aceita requisições POST. Use /api/auth/login para login.
+      responses:
+        '405':
+          description: Método não permitido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Use /api/auth/login para login
+
+  /api/activities:
+    get:
+      tags:
+        - Atividades
+      summary: Listar atividades do usuário
+      description: Retorna uma lista paginada de atividades do usuário autenticado, ordenadas por data (mais recentes primeiro).
+      operationId: getActivities
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Número máximo de atividades a retornar
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          example: 20
+        - name: since
+          in: query
+          description: Retornar apenas atividades após esta data (formato ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+          example: '2025-11-01T00:00:00Z'
+      responses:
+        '200':
+          description: Atividades obtidas com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Activities retrieved successfully
+                  data:
+                    type: object
+                    properties:
+                      activities:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Activity'
+                      total:
+                        type: integer
+                        description: Total de atividades retornadas
+                        example: 15
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags:
+        - Atividades
+      summary: Criar nova atividade
+      description: Adiciona uma nova atividade ao histórico do usuário.
+      operationId: createActivity
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - description
+              properties:
+                type:
+                  type: string
+                  enum: [success, info, warning, error]
+                  description: Tipo/severidade da atividade
+                  example: success
+                description:
+                  type: string
+                  maxLength: 500
+                  description: Descrição detalhada da atividade
+                  example: Biodigestor atingiu temperatura ideal de operação
+      responses:
+        '200':
+          description: Atividade criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Activity added successfully
+                  data:
+                    $ref: '#/components/schemas/Activity'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/activities/demo:
+    post:
+      tags:
+        - Atividades
+      summary: Criar atividade demo aleatória
+      description: |
+        Endpoint de teste que cria uma atividade demo aleatória.
+        Útil para popular o sistema com dados de exemplo durante desenvolvimento.
+      operationId: createDemoActivity
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Atividade demo criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Demo activity created successfully
+                  data:
+                    $ref: '#/components/schemas/Activity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/biodigester/data:
+    get:
+      tags:
+        - Biodigestor
+      summary: Obter dados do biodigestor
+      description: |
+        Retorna os dados mais recentes do biodigestor do usuário, incluindo:
+        - Resíduos processados
+        - Energia gerada
+        - Taxa de eficiência
+        - Histórico dos últimos 7 dias para gráficos
+      operationId: getBiodigesterData
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Dados do biodigestor obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Biodigester data retrieved successfully
+                  data:
+                    type: object
+                    properties:
+                      wasteProcessed:
+                        type: array
+                        description: Histórico de resíduos processados (últimos 7 dias)
+                        items:
+                          type: object
+                          properties:
+                            month:
+                              type: string
+                              example: nov
+                            value:
+                              type: number
+                              example: 450
+                      energyGenerated:
+                        type: array
+                        description: Histórico de energia gerada (últimos 7 dias)
+                        items:
+                          type: object
+                          properties:
+                            month:
+                              type: string
+                              example: nov
+                            value:
+                              type: number
+                              example: 120
+                      stats:
+                        type: object
+                        description: Estatísticas atuais
+                        properties:
+                          wasteProcessed:
+                            $ref: '#/components/schemas/Stat'
+                          energyGenerated:
+                            $ref: '#/components/schemas/Stat'
+                          efficiency:
+                            $ref: '#/components/schemas/Stat'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/dashboard/indicators:
+    get:
+      tags:
+        - Dashboard
+      summary: Obter indicadores do dashboard
+      description: Retorna os principais indicadores para exibição no painel de controle.
+      operationId: getDashboardIndicators
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Indicadores obtidos com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Dashboard indicators retrieved successfully
+                  data:
+                    type: object
+                    properties:
+                      energyGenerated:
+                        type: number
+                        description: Total de energia gerada (kWh)
+                        example: 1250
+                      wasteProcessed:
+                        type: number
+                        description: Total de resíduos processados (kg)
+                        example: 3500
+                      taxSavings:
+                        type: number
+                        description: Total de impostos economizados (R$)
+                        example: 850
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/stripe:
+    post:
+      tags:
+        - Pagamentos
+      summary: Criar sessão de checkout (simplificada)
+      description: |
+        Cria uma sessão de checkout do Stripe para um pagamento padrão de R$ 20,00.
+        Retorna uma URL para redirecionar o usuário ao checkout do Stripe.
+      operationId: createSimpleCheckout
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Sessão de checkout criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Checkout session created successfully
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        format: uri
+                        description: URL da página de checkout do Stripe
+                        example: https://checkout.stripe.com/pay/cs_test_xxx
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '501':
+          description: Stripe não configurado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Stripe not configured
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/stripe/checkout-session:
+    post:
+      tags:
+        - Pagamentos
+      summary: Criar sessão de checkout personalizada
+      description: |
+        Cria uma sessão de checkout do Stripe com valores personalizados.
+        Permite especificar o nome do produto e o valor da compra.
+      operationId: createCheckoutSession
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                productName:
+                  type: string
+                  description: Nome do produto/serviço
+                  example: Plano Premium
+                amount:
+                  type: number
+                  format: float
+                  minimum: 0
+                  description: Valor em reais (será convertido para centavos)
+                  example: 99.90
+      responses:
+        '200':
+          description: Sessão de checkout criada com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Checkout session created successfully
+                  data:
+                    type: object
+                    properties:
+                      url:
+                        type: string
+                        format: uri
+                        description: URL da página de checkout do Stripe
+                        example: https://checkout.stripe.com/pay/cs_test_xxx
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '501':
+          description: Stripe não configurado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: Stripe not configured
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token
+      description: |
+        Cookie de sessão do Supabase definido automaticamente após login bem-sucedido.
+        
+        **Importante**: Para que o navegador envie este cookie em requisições cross-origin,
+        você deve incluir `credentials: 'include'` nas chamadas fetch do frontend.
+
+  schemas:
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        user_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        type:
+          type: string
+          enum: [success, info, warning, error]
+          example: success
+        description:
+          type: string
+          example: Biodigestor atingiu temperatura ideal de operação
+        timestamp:
+          type: string
+          description: Timestamp formatado em português (relativo ou data)
+          example: 5 minutos atrás
+        created_at:
+          type: string
+          format: date-time
+          example: '2025-11-23T14:30:00Z'
+
+    Stat:
+      type: object
+      properties:
+        value:
+          type: string
+          description: Valor atual da métrica
+          example: '450'
+        unit:
+          type: string
+          description: Unidade de medida
+          example: kg
+        change:
+          type: string
+          description: Percentual de mudança
+          example: +12.5%
+        increasing:
+          type: boolean
+          description: Indica se a tendência é de aumento
+          example: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: An error occurred
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        errors:
+          type: object
+          description: Objeto contendo os campos com erro e suas respectivas mensagens
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email:
+              - Invalid email format
+            password:
+              - Password must be at least 8 characters long
+              - Password must contain at least one uppercase letter
+
+  responses:
+    Unauthorized:
+      description: Não autorizado - usuário não autenticado ou sessão expirada
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Unauthorized
+
+    BadRequest:
+      description: Requisição inválida - parâmetros ou corpo da requisição incorretos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Invalid request parameters
+
+    ValidationError:
+      description: Erro de validação - um ou mais campos não passaram na validação
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationErrorResponse'
+
+    InternalError:
+      description: Erro interno do servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            error: Internal server error
+
+security:
+  - cookieAuth: []

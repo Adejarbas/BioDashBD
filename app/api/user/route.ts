@@ -1,57 +1,51 @@
+import { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { createCookieHandlers } from "@/lib/supabase/server";
 import {
   successResponse,
-  unauthorizedResponse,
   errorResponse,
+  unauthorizedResponse,
 } from "@/lib/api-response";
 
-export async function GET() {
+// GET: retorna usuário autenticado
+export async function GET(req: NextRequest) {
   try {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return errorResponse("Supabase env vars missing", 500);
+    }
+
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: createCookieHandlers(cookieStore),
-      }
+      { cookies: createCookieHandlers(cookieStore) }
     );
 
-    const { data, error: authError } = await supabase.auth.getUser();
+    const { data, error } = await supabase.auth.getUser();
 
-    if (authError || !data?.user) {
+    if (error) {
+      // Erro na verificação da sessão
       return unauthorizedResponse("Unauthorized");
     }
 
-    const user = data.user;
-
-    const { data: userProfile, error } = await supabase
-      .from("users")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (error && error.code !== "PGRST116") {
-      console.error("Database error:", error);
-      return errorResponse("Failed to fetch user data", 500);
+    if (!data.user) {
+      return unauthorizedResponse("Unauthorized");
     }
 
-    const userData =
-      userProfile ||
-      {
-        id: user.id,
-        email: user.email,
-        full_name: user.user_metadata?.full_name || "User",
-        company_name: null,
-        address: null,
-        phone: null,
-        profile_image_url: null,
-      };
-
-    return successResponse(userData, "User data retrieved successfully");
-  } catch (error: any) {
-    console.error("Auth error:", error);
-    return errorResponse("Internal server error", 500);
+    // Retorna apenas dados necessários (evita enviar tudo)
+    return successResponse({
+      userId: data.user.id,
+      email: data.user.email,
+      // Adicione outros campos se tiver armazenado no profile (ex: nome)
+    });
+  } catch (e) {
+    console.error("GET /api/user error:", e);
+    return errorResponse("Failed to fetch user", 500);
   }
+}
+
+// (Opcional) Se alguém tentar POST aqui por engano:
+export async function POST() {
+  return errorResponse("Use /api/auth/login para login", 405);
 }
