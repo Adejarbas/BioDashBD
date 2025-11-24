@@ -26,14 +26,21 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$supabase$2
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f40$supabase$2f$ssr$2f$dist$2f$module$2f$createServerClient$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/@supabase/ssr/dist/module/createServerClient.js [middleware-edge] (ecmascript)");
 ;
 ;
-const FRONTEND_ORIGIN = process.env.FRONTEND_URL || "http://localhost:3000";
+// Remove barra final se existir na origem
+function normalizeOrigin(origin) {
+    return origin.endsWith("/") ? origin.slice(0, -1) : origin;
+}
+const FRONTEND_ORIGIN = normalizeOrigin(process.env.FRONTEND_URL || "http://localhost:3001");
 async function middleware(req) {
     // Preflight CORS para /api
+    // CORS Preflight para /api
     if (req.method === "OPTIONS" && req.nextUrl.pathname.startsWith("/api")) {
+        const origin = req.headers.get("origin") || FRONTEND_ORIGIN;
+        const normalizedOrigin = normalizeOrigin(origin);
         const resPre = new __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$server$2f$web$2f$exports$2f$index$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["NextResponse"](null, {
             status: 204
         });
-        resPre.headers.set("Access-Control-Allow-Origin", FRONTEND_ORIGIN);
+        resPre.headers.set("Access-Control-Allow-Origin", normalizedOrigin);
         resPre.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
         resPre.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
         resPre.headers.set("Access-Control-Allow-Credentials", "true");
@@ -42,7 +49,9 @@ async function middleware(req) {
     const res = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$esm$2f$server$2f$web$2f$exports$2f$index$2e$js__$5b$middleware$2d$edge$5d$__$28$ecmascript$29$__["NextResponse"].next();
     // CORS em rotas /api
     if (req.nextUrl.pathname.startsWith("/api")) {
-        res.headers.set("Access-Control-Allow-Origin", FRONTEND_ORIGIN);
+        const origin = req.headers.get("origin") || FRONTEND_ORIGIN;
+        const normalizedOrigin = normalizeOrigin(origin);
+        res.headers.set("Access-Control-Allow-Origin", normalizedOrigin);
         res.headers.set("Access-Control-Allow-Credentials", "true");
     }
     if ("TURBOPACK compile-time falsy", 0) //TURBOPACK unreachable
