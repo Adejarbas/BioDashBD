@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser();
     
     if (!user) {
-      return unauthorizedResponse('Not authenticated');
+      return unauthorizedResponse('Faça o Login para continuar');
     }
 
     if (!user.email) {
