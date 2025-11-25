@@ -15,13 +15,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { email, password } = body;
 
-    // Validação de campos obrigatórios
     const requiredValidation = validateRequiredFields(body, ["email", "password"]);
     if (!requiredValidation.valid) {
       return validationErrorResponse(requiredValidation.errors);
     }
 
-    // Validação de formato de email
     if (!isValidEmail(email)) {
       return validationErrorResponse({
         email: ["Invalid email format"],
@@ -42,15 +40,20 @@ export async function POST(req: NextRequest) {
       password,
     });
 
+    // DEBUG
+    console.log("Login attempt:", { 
+      email, 
+      success: !!data.user,
+      hasSession: !!data.session 
+    });
+
     if (error) {
-      // Mapear erros comuns do Supabase para mensagens mais amigáveis
       let errorMessage = error.message;
       if (error.message.includes("Invalid login credentials")) {
         errorMessage = "Invalid email or password";
       } else if (error.message.includes("Email not confirmed")) {
         errorMessage = "Please confirm your email before signing in";
       }
-
       return errorResponse(errorMessage, 401);
     }
 
@@ -58,7 +61,14 @@ export async function POST(req: NextRequest) {
       return errorResponse("Failed to authenticate user", 500);
     }
 
-    // Retornar dados mínimos para o front com redirectTo
+    // DEBUG: verificar cookies
+    try {
+      const allCookies = cookieStore.getAll();
+      console.log("Cookies set after login:", allCookies.map(c => c.name));
+    } catch (e) {
+      console.warn("Could not read cookies:", e);
+    }
+
     return successResponse(
       {
         userId: data.user.id,
