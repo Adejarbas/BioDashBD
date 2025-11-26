@@ -1,11 +1,8 @@
 export const runtime = 'nodejs';
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import {
   successResponse,
-  unauthorizedResponse,
   errorResponse,
   validationErrorResponse,
 } from '@/lib/api-response';
@@ -23,41 +20,7 @@ export async function POST(req: NextRequest) {
       return errorResponse('Stripe not configured', 501);
     }
 
-    // Autenticação via Supabase usando cookies (App Router)
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, { ...options, path: "/" });
-              });
-            } catch (error) {
-              // Cookies são automaticamente persistidos no App Router
-            }
-          },
-        },
-      }
-    );
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    
-    if (!user) {
-      return unauthorizedResponse('Faça o Login para continuar');
-    }
-
-    if (!user.email) {
-      return errorResponse('User email is required', 400);
-    }
-
-    // (Opcional) Receber dados do produto via body
+    // Receber dados do produto via body
     const body = await req.json().catch(() => ({}));
     const { productName, amount } = body;
 
@@ -85,9 +48,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${(env.FRONTEND_URL || 'https://bio-dash-front-theta.vercel.app/')}/dashboard`,
-      cancel_url: `${env.FRONTEND_URL || 'https://bio-dash-front-theta.vercel.app/'}`,
-      customer_email: user.email,
+      success_url: `${(env.FRONTEND_URL || 'http://localhost:3001')}/dashboard`,
+      cancel_url: `${env.FRONTEND_URL || 'http://localhost:3001'}`,
     });
 
     if (!session.url) {
