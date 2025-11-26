@@ -85,8 +85,8 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: 'payment',
-      success_url: `${(env.FRONTEND_URL || 'http://localhost:3001')}/dashboard`,
-      cancel_url: `${env.FRONTEND_URL || 'http://localhost:3001'}`,
+      success_url: `${(env.FRONTEND_URL || 'https://bio-dash-front-theta.vercel.app/')}/dashboard`,
+      cancel_url: `${env.FRONTEND_URL || 'https://bio-dash-front-theta.vercel.app/'}`,
       customer_email: user.email,
     });
 

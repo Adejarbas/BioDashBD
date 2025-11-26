@@ -6,20 +6,36 @@ import { createServerClient } from "@supabase/ssr";
 function normalizeOrigin(origin: string) {
   return origin.endsWith("/") ? origin.slice(0, -1) : origin;
 }
-const FRONTEND_ORIGIN = normalizeOrigin(process.env.FRONTEND_URL || "http://localhost:3001");
+
+// Permitir múltiplas origens (dev e produção)
+const ALLOWED_ORIGINS = [
+  normalizeOrigin(process.env.FRONTEND_URL || "http://localhost:3001"),
+  normalizeOrigin(process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3001"),
+].filter((origin, index, self) => self.indexOf(origin) === index); // Remove duplicatas
+
+function isAllowedOrigin(origin: string | null): boolean {
+  if (!origin) return false;
+  const normalized = normalizeOrigin(origin);
+  return ALLOWED_ORIGINS.some(allowed => allowed === normalized);
+}
 
 export async function middleware(req: NextRequest) {
   // Preflight CORS para /api
 
   // CORS Preflight para /api
   if (req.method === "OPTIONS" && req.nextUrl.pathname.startsWith("/api")) {
-    const origin = req.headers.get("origin") || FRONTEND_ORIGIN;
-    const normalizedOrigin = normalizeOrigin(origin);
+    const origin = req.headers.get("origin");
     const resPre = new NextResponse(null, { status: 204 });
-    resPre.headers.set("Access-Control-Allow-Origin", normalizedOrigin);
-    resPre.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-    resPre.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    resPre.headers.set("Access-Control-Allow-Credentials", "true");
+    
+    if (origin && isAllowedOrigin(origin)) {
+      const normalizedOrigin = normalizeOrigin(origin);
+      resPre.headers.set("Access-Control-Allow-Origin", normalizedOrigin);
+      resPre.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+      resPre.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
+      resPre.headers.set("Access-Control-Allow-Credentials", "true");
+      resPre.headers.set("Vary", "Origin");
+    }
+    
     return resPre;
   }
 
@@ -27,10 +43,14 @@ export async function middleware(req: NextRequest) {
 
   // CORS em rotas /api
   if (req.nextUrl.pathname.startsWith("/api")) {
-    const origin = req.headers.get("origin") || FRONTEND_ORIGIN;
-    const normalizedOrigin = normalizeOrigin(origin);
-    res.headers.set("Access-Control-Allow-Origin", normalizedOrigin);
-    res.headers.set("Access-Control-Allow-Credentials", "true");
+    const origin = req.headers.get("origin");
+    
+    if (origin && isAllowedOrigin(origin)) {
+      const normalizedOrigin = normalizeOrigin(origin);
+      res.headers.set("Access-Control-Allow-Origin", normalizedOrigin);
+      res.headers.set("Access-Control-Allow-Credentials", "true");
+      res.headers.set("Vary", "Origin");
+    }
   }
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
