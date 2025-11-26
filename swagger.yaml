@@ -536,8 +536,7 @@ paths:
         Cria uma sessão de checkout do Stripe para um pagamento padrão de R$ 20,00.
         Retorna uma URL para redirecionar o usuário ao checkout do Stripe.
       operationId: createSimpleCheckout
-      security:
-        - cookieAuth: []
+      security: []
       responses:
         '200':
           description: Sessão de checkout criada com sucesso
@@ -562,8 +561,6 @@ paths:
                         example: https://checkout.stripe.com/pay/cs_test_xxx
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '501':
           description: Stripe não configurado
           content:
@@ -585,8 +582,7 @@ paths:
         Cria uma sessão de checkout do Stripe com valores personalizados.
         Permite especificar o nome do produto e o valor da compra.
       operationId: createCheckoutSession
-      security:
-        - cookieAuth: []
+      security: []
       requestBody:
         required: false
         content:
@@ -628,8 +624,6 @@ paths:
                         example: https://checkout.stripe.com/pay/cs_test_xxx
         '400':
           $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/ValidationError'
         '501':
