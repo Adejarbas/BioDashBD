@@ -59,8 +59,8 @@ BioDashBD é uma API REST moderna construída com Next.js 16 que fornece backend
 - ✅ Filtros e paginação
 
 ### Pagamentos
-- ✅ Criação de sessões de checkout Stripe
-- ✅ Checkout personalizado com valores dinâmicos
+- ✅ Criação de sessões de checkout Stripe (sem necessidade de login)
+- ✅ Checkout personalizado com valores dinâmicos (sem necessidade de login)
 - ✅ Webhooks para confirmação de pagamento (preparado)
 
 ### Segurança
@@ -369,7 +369,8 @@ npx swagger-ui-watcher swagger.yaml
 | `POST` | `/api/activities` | Criar atividade | ✅ |
 | `GET` | `/api/biodigester/data` | Dados do biodigestor | ✅ |
 | `GET` | `/api/dashboard/indicators` | Indicadores | ✅ |
-| `POST` | `/api/stripe/checkout-session` | Criar checkout | ✅ |
+| `POST` | `/api/stripe` | Checkout simples (R$20) | ❌ |
+| `POST` | `/api/stripe/checkout-session` | Criar checkout | ❌ |
 
 ### Exemplo de Uso
 
@@ -392,6 +393,23 @@ const userResponse = await fetch('http://localhost:3003/api/user', {
 
 const userData = await userResponse.json();
 console.log(userData);
+
+// 3. Criar checkout simples do Stripe (sem autenticação)
+const simpleCheckout = await fetch('http://localhost:3003/api/stripe', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+});
+const simpleData = await simpleCheckout.json();
+window.location.href = simpleData.data.url; // redireciona para o Stripe
+
+// 4. Criar checkout personalizado do Stripe (sem autenticação)
+const customCheckout = await fetch('http://localhost:3003/api/stripe/checkout-session', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ productName: 'Plano Premium', amount: 99.90 })
+});
+const customData = await customCheckout.json();
+window.location.href = customData.data.url;
 ```
 
 ## 🧪 Testes

@@ -83,8 +83,26 @@ const response = await fetch('http://localhost:3003/api/user', {
 - `GET /api/dashboard/indicators` - Obter indicadores principais
 
 ### Pagamentos (Stripe)
-- `POST /api/stripe` - Criar checkout simples (R$ 20,00)
-- `POST /api/stripe/checkout-session` - Criar checkout personalizado
+- `POST /api/stripe` - Criar checkout simples (R$ 20,00) — não requer login
+- `POST /api/stripe/checkout-session` - Criar checkout personalizado — não requer login
+
+#### Exemplos
+
+```javascript
+// Checkout simples (R$20) — sem autenticação
+const res = await fetch('http://localhost:3003/api/stripe', { method: 'POST' });
+const data = await res.json();
+window.location.href = data.data.url;
+
+// Checkout personalizado — sem autenticação
+const res2 = await fetch('http://localhost:3003/api/stripe/checkout-session', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ productName: 'Plano Premium', amount: 99.90 })
+});
+const data2 = await res2.json();
+window.location.href = data2.data.url;
+```
 
 ## 🧪 Testando a API
 
@@ -199,9 +217,8 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx...
 
 ### Erro 401 (Unauthorized)
 
-- Certifique-se de que você fez login primeiro
-- Verifique se está enviando `credentials: 'include'` nas requisições
-- Verifique se o cookie não expirou (faça login novamente)
+- Aplica-se apenas às rotas protegidas (ex.: `/api/user`, `/api/activities`, `/api/biodigester/data`)
+- As rotas de Stripe não exigem autenticação
 
 ### Erro 404 (Not Found)
 
@@ -217,11 +234,12 @@ NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx...
 ### Erro CORS
 
 - O middleware já está configurado para aceitar requisições de `http://localhost:3001`
-- Certifique-se de que está usando `credentials: 'include'`
+- Certifique-se de que está usando `credentials: 'include'` nas rotas protegidas
+- Para Stripe (sem auth), não é necessário enviar cookies
 
 ## 📝 Notas Adicionais
 
-- Todos os endpoints (exceto `/api/auth/login` e `/api/auth/signup`) requerem autenticação
+- Endpoints protegidos requerem autenticação (usuário, atividades, biodigestor). Endpoints de Stripe funcionam sem autenticação.
 - Os timestamps são retornados em formato relativo em português (ex: "5 minutos atrás")
 - Valores monetários para o Stripe devem ser enviados em reais (serão convertidos para centavos automaticamente)
 - A API retorna códigos HTTP apropriados para cada tipo de resposta
