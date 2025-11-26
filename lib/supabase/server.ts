@@ -9,12 +9,17 @@ export const isSupabaseConfigured = !!(
 
 /**
  * Configuração padrão de cookies para Supabase
+ * Ajustado para funcionar em produção com domínios diferentes
  */
 export function getCookieOptions(options?: CookieOptions): CookieOptions {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isSecure = isProduction || process.env.NEXT_PUBLIC_API_BASE_URL?.startsWith('https');
+  
   return {
     ...options,
     path: "/",
-    sameSite: "lax" as const,
+    sameSite: isProduction ? "none" as const : "lax" as const,
+    secure: isSecure,
     httpOnly: options?.httpOnly ?? false,
   };
 }
