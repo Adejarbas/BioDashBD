@@ -10,8 +10,8 @@ info:
     **Importante**: Todas as requisições para rotas protegidas devem incluir a opção `credentials: 'include'` no fetch para enviar os cookies de autenticação.
     
     ## URLs Base
-    - **Desenvolvimento**: `http://localhost:3003`
-    - **Frontend**: `http://localhost:3001`
+    - **Desenvolvimento**: `https://biodashbd-2.onrender.com/`
+    - **Frontend**: `https://bio-dash-front-theta.vercel.app/`
   version: 1.0.0
   contact:
     name: Equipe BioDashBD
@@ -20,9 +20,9 @@ info:
     name: ISC
 
 servers:
-  - url: http://localhost:3003
+  - url: https://biodashbd-2.onrender.com/
     description: Servidor de desenvolvimento
-  - url: http://localhost:3000
+  - url: http://localhost:3003
     description: Servidor de produção (alternativo)
 
 tags:
