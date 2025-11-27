@@ -1,21 +1,17 @@
-/**
- * next.config.js — adiciona headers CORS para APIs
- * Usa process.env.FRONTEND_URL (definida em .env)
- */
 /** @type {import('next').NextConfig} */
-module.exports = {
+const nextConfig = {
+  reactStrictMode: true,
   async headers() {
-    const origin = process.env.FRONTEND_URL || 'http://localhost:3001'
     return [
       {
-        source: '/api/:path*',
+        source: "/swagger.yaml",
         headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: origin },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,POST,PUT,DELETE' },
-          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+          { key: "Content-Type", value: "application/x-yaml" },
+          { key: "Cache-Control", value: "no-cache" },
         ],
       },
-    ]
+    ];
   },
-}
+};
+
+module.exports = nextConfig;

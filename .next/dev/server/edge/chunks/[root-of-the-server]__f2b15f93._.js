@@ -33,7 +33,7 @@ function normalizeOrigin(origin) {
 // Permitir múltiplas origens (dev e produção)
 const ALLOWED_ORIGINS = [
     normalizeOrigin(process.env.FRONTEND_URL || "http://localhost:3001"),
-    normalizeOrigin(("TURBOPACK compile-time value", "http://localhost:3001") || "http://localhost:3001")
+    normalizeOrigin(process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3001")
 ].filter((origin, index, self)=>self.indexOf(origin) === index); // Remove duplicatas
 function isAllowedOrigin(origin) {
     if (!origin) return false;
