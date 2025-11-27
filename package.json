@@ -32,6 +32,8 @@
     "next": "^16.0.0",
     "stripe": "^19.1.0",
     "supabase": "^2.54.11",
+    "swagger-ui": "^5.30.3",
+    "swagger-ui-react": "^5.30.3",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
