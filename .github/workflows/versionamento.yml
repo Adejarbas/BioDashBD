@@ -324,7 +324,7 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "❌ Falha pipeline Actions - BioDashBD"
-          to: daniiel_adejarbas@hotmail.com
+          to: grupobiogen.equipe@gmail.com
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             ⚠️ A execução do pipeline FALHOU!
@@ -352,7 +352,7 @@ jobs:
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
           subject: "✅ Pipeline Actions executado com sucesso - BioDashBD"
-          to: daniiel_adejarbas@hotmail.com
+          to: grupobiogen.equipe@gmail.com
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             🎉 Pipeline executado com SUCESSO!
