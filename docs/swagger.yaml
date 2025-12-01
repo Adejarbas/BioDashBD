@@ -1,0 +1,309 @@
+openapi: 3.0.3
+info:
+  title: BioDashBD API
+  description: |
+    API completa do backend BioDashBD para gerenciamento de biodigestores, autenticação, atividades e pagamentos.
+    
+    ## Autenticação
+    Esta API utiliza autenticação baseada em cookies via Supabase. Após fazer login com sucesso através do endpoint `/api/auth/login`, um cookie de sessão será automaticamente definido no navegador.
+    
+    **Importante**: Todas as requisições para rotas protegidas devem incluir a opção `credentials: 'include'` no fetch para enviar os cookies de autenticação.
+    
+    ## URLs Base
+    - **Desenvolvimento**: `https://biodashbd-2.onrender.com/`
+    - **Frontend**: `https://bio-dash-front-theta.vercel.app/`
+  version: 1.0.0
+  contact:
+    name: Equipe BioDashBD
+    email: contato@biodashbd.com
+  license:
+    name: ISC
+
+servers:
+  - url: https://biodashbd-2.onrender.com/
+    description: Servidor de desenvolvimento
+  - url: http://localhost:3003
+    description: Servidor de produção (alternativo)
+
+tags:
+  - name: Autenticação
+    description: Endpoints para login, registro e logout de usuários
+  - name: Usuário
+    description: Gerenciamento de dados do usuário autenticado
+  - name: Atividades
+    description: Gerenciamento de atividades e eventos do sistema
+  - name: Biodigestor
+    description: Dados e estatísticas dos biodigestores
+  - name: Dashboard
+    description: Indicadores e métricas do painel de controle
+  - name: Pagamentos
+    description: Integração com Stripe para processamento de pagamentos
+
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Autenticação
+      summary: Realizar login
+      description: Autentica um usuário com email e senha, criando uma sessão via cookie do Supabase.
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login realizado com sucesso
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: "Credenciais inválidas"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/auth/signup:
+    post:
+      tags:
+        - Autenticação
+      summary: Criar nova conta
+      description: Registra um novo usuário no sistema.
+      operationId: signup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - full_name
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                full_name:
+                  type: string
+                company_name:
+                  type: string
+      responses:
+        '200':
+          description: Conta criada com sucesso
+        '400':
+          description: "Erro na criação da conta (ex: email já existe)"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Autenticação
+      summary: Realizar logout
+      operationId: logout
+      responses:
+        '200':
+          description: Logout realizado
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/user:
+    get:
+      tags:
+        - Usuário
+      summary: Obter dados do usuário autenticado
+      operationId: getUser
+      responses:
+        '200':
+          description: Dados retornados
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Método não permitido
+      responses:
+        '405':
+          description: "Use /api/auth/login para login"
+
+  /api/activities:
+    get:
+      tags:
+        - Atividades
+      summary: Listar atividades
+      operationId: getActivities
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: since
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Atividades retornadas
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      tags:
+        - Atividades
+      summary: Criar nova atividade
+      operationId: createActivity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Atividade criada
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/activities/demo:
+    post:
+      tags:
+        - Atividades
+      summary: Criar atividade demo
+      operationId: createDemoActivity
+      responses:
+        '200':
+          description: Criada
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/biodigester/data:
+    get:
+      tags:
+        - Biodigestor
+      summary: Obter dados do biodigestor
+      operationId: getBiodigesterData
+      responses:
+        '200':
+          description: Dados retornados
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/dashboard/indicators:
+    get:
+      tags:
+        - Dashboard
+      summary: Obter indicadores
+      operationId: getDashboardIndicators
+      responses:
+        '200':
+          description: Ok
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/stripe:
+    post:
+      tags:
+        - Pagamentos
+      summary: Criar sessão simple checkout
+      operationId: createSimpleCheckout
+      responses:
+        '200':
+          description: Sessão criada
+        '400':
+          description: Requisição inválida
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /api/stripe/checkout-session:
+    post:
+      tags:
+        - Pagamentos
+      summary: Criar sessão de checkout
+      operationId: createCheckoutSession
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                productName:
+                  type: string
+      responses:
+        '200':
+          description: OK
+        '400':
+          description: "Bad request"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sb-access-token
+
+  schemas:
+    Activity:
+      type: object
+
+    Stat:
+      type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Não autorizado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalError:
+      description: Erro interno
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
