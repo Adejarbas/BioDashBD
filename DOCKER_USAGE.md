@@ -165,7 +165,12 @@ const API_BASE = "http://biodash-backend:3003"
 
 ## 🔐 Credenciais de Teste (Professor)
 
-> Observação: Esta seção contém **credenciais de teste** para facilitar validações locais e testes do professor. **NÃO** use esses dados em produção.
+> ⚠️ **IMPORTANTE**: Para fins de avaliação acadêmica, as **credenciais completas de teste** foram enviadas separadamente por email/WhatsApp ao professor. Esta seção contém apenas placeholders por questões de segurança do GitHub.
+
+**Para testar o projeto, você precisará:**
+1. Copiar o `.env.example` para `.env.local`
+2. Substituir os placeholders pelas credenciais reais enviadas por email
+3. Rodar `docker-compose up biodash-backend --build`
 
 ```env
 # Supabase (test)
@@ -173,7 +178,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://scsldapnrzpjkyqkeiop.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjc2xkYXBucnpwamt5cWtlaW9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTYyMzksImV4cCI6MjA3MTEzMjIzOX0.TxRPb6uaLdCCBdjvjKOghvaD7EBPlA2rZqTfh8gPdBw
 
 # Supabase (chave sensível — usar apenas server-side)
-SUPABASE_SERVICE_ROLE_KEY=eeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjc2xkYXBucnpwamt5cWtlaW9wIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTU1NjIzOSwiZXhwIjoyMDcxMTMyMjM5fQ.0ggKAdkhPLQMpLQEp3YzQZN0tR4DIEZeErvhvgxysFQ
+SUPABASE_SERVICE_ROLE_KEY=YOUR_SUPABASE_SERVICE_ROLE_KEY
 
 # Endpoints / URLs
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3003
@@ -182,8 +187,12 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3003
 NEXT_PUBLIC_FRONTEND_URL=http://localhost:3001
 
 # Stripe (chave sensível — server only)
-STRIPE_SECRET_KEY=sk_test_51S09nyJQWiA5dculuMmTNQJWCsXYfZH8ldnj2fOn80rSpDcZJXRMFvXSqD4iawaFS12l6zFtIHjlo3WaEDz2BgrM008pgR9nmJ
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_51S09nyJQWiA5dculSKoXDRPDgCQD6iBuRs2biQtmFAUgR8cUW6VLHeMVTdFmq8aAjeeY9DUyzOx17jwoVEHdsJCv003dkTBsvm
+STRIPE_SECRET_KEY=YOUR_STRIPE_SECRET_KEY
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=YOUR_STRIPE_PUBLISHABLE_KEY
+
+# BetterStack Logging
+LOGTAIL_TOKEN=YOUR_LOGTAIL_TOKEN
+LOGTAIL_URL=YOUR_LOGTAIL_URL
 ```
 
 > AVISO: Estes valores foram adicionados para facilitar testes locais; remova ou substitua por variáveis reais ao publicar em produção.

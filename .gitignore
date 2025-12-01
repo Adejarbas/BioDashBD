@@ -3,6 +3,7 @@
 ENV_VARS.md
 .env
 .next
+CREDENTIALS_FOR_TESTING.md
 
 #teste
 .vercel
