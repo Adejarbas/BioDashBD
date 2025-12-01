@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies (usando npm pois o projeto usa npm)
-RUN npm install --frozen-lockfile --production=false
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
