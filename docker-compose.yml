@@ -5,7 +5,10 @@ version: '3.8'
 
 services:
   biodash-backend:
+    # Opção 1: Build local (desenvolvimento)
     build: .
+    # Opção 2: Usar imagem do Docker Hub (descomente a linha abaixo e comente o 'build: .')
+    # image: danielrodriguesadejarbas/biodash-backend:latest
     ports:
       - "3003:3003"
     env_file:

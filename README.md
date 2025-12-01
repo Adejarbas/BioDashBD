@@ -458,6 +458,63 @@ npm run test:watch
 - **Render**: [Deploy Guide](https://render.com/)
 - **Fly.io**: [Deploy Guide](https://fly.io/)
 
+## 🐳 Docker
+
+### Docker Hub
+
+A imagem oficial do BioDashBD está disponível no Docker Hub:
+
+```bash
+docker pull danielrodriguesadejarbas/biodash-backend:latest
+```
+
+**Tags disponíveis:**
+- `latest` - Última versão estável
+- `v1.x.x` - Versões específicas (ex: `v1.0.0`, `v1.1.0`)
+
+### Executando com Docker
+
+#### Opção 1: Usando Docker Compose (Recomendado)
+
+```bash
+# Build e executar
+docker-compose up biodash-backend --build
+
+# Executar em background
+docker-compose up biodash-backend -d
+
+# Ver logs
+docker-compose logs -f biodash-backend
+```
+
+#### Opção 2: Usando Docker diretamente
+
+```bash
+# Usando imagem do Docker Hub
+docker run -p 3003:3003 \
+  --env-file .env.local \
+  danielrodriguesadejarbas/biodash-backend:latest
+
+# Ou fazer build local
+docker build -t biodash-backend .
+docker run -p 3003:3003 --env-file .env.local biodash-backend
+```
+
+### GitHub Actions - CI/CD
+
+O projeto possui pipeline automatizado que:
+- ✅ Calcula versão semântica automaticamente
+- ✅ Faz build e push da imagem Docker para o Docker Hub
+- ✅ Envia notificações por e-mail (sucesso/falha)
+
+**Repositório Docker Hub**: `danielrodriguesadejarbas/biodash-backend`
+
+### Documentação Completa
+
+Para mais detalhes sobre Docker, consulte:
+- 📄 [DOCKER_USAGE.md](./DOCKER_USAGE.md) - Guia completo de uso
+- 📄 [docker-setup.md](./docker-setup.md) - Setup rápido para iniciantes
+
 ## 🐛 Troubleshooting
 
 ### Erro: "Cannot read properties of undefined (reading 'getUser')"

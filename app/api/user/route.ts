@@ -7,11 +7,13 @@ import {
   errorResponse,
   unauthorizedResponse,
 } from "@/lib/api-response";
+const logger = require("@/lib/logger-winston");
 
 // GET: retorna usuário autenticado
 export async function GET(req: NextRequest) {
   try {
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      logger.error("Supabase environment variables missing");
       return errorResponse("Supabase env vars missing", 500);
     }
 
@@ -26,12 +28,16 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       // Erro na verificação da sessão
+      logger.warn("Get user - unauthorized", { error: error.message });
       return unauthorizedResponse("Unauthorized");
     }
 
     if (!data.user) {
+      logger.warn("Get user - no user data");
       return unauthorizedResponse("Unauthorized");
     }
+
+    logger.info("User data fetched", { userId: data.user.id, email: data.user.email });
 
     // Retorna apenas dados necessários (evita enviar tudo)
     return successResponse({
@@ -39,7 +45,8 @@ export async function GET(req: NextRequest) {
       email: data.user.email,
       // Adicione outros campos se tiver armazenado no profile (ex: nome)
     });
-  } catch (e) {
+  } catch (e: any) {
+    logger.error("GET /api/user error", { error: e.message, stack: e.stack });
     console.error("GET /api/user error:", e);
     return errorResponse("Failed to fetch user", 500);
   }

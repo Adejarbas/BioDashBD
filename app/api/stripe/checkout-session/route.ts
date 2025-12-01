@@ -6,6 +6,7 @@ import {
   errorResponse,
   validationErrorResponse,
 } from '@/lib/api-response';
+const logger = require("@/lib/logger-winston");
 
 const env = (typeof globalThis !== "undefined" && (globalThis as any).process && (globalThis as any).process.env)
   ? (globalThis as any).process.env
@@ -17,6 +18,7 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY || env.SECRET_STRIPE_KEY || '');
 export async function POST(req: NextRequest) {
   try {
     if (!env.STRIPE_SECRET_KEY && !env.SECRET_STRIPE_KEY) {
+      logger.error("Stripe not configured - missing secret key");
       return errorResponse('Stripe not configured', 501);
     }
 
@@ -24,10 +26,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { productName, amount } = body;
 
+    logger.info("Stripe checkout session request", { productName, amount });
+
     // Validação de amount se fornecido
     if (amount !== undefined) {
       const amountNum = Number(amount);
       if (isNaN(amountNum) || amountNum < 0) {
+        logger.warn("Invalid amount provided", { amount });
         return validationErrorResponse({
           amount: ['Amount must be a positive number'],
         });
@@ -53,11 +58,15 @@ export async function POST(req: NextRequest) {
     });
 
     if (!session.url) {
+      logger.error("Stripe session created but no URL returned");
       return errorResponse('Failed to create checkout session', 500);
     }
 
+    logger.info("Stripe checkout session created successfully", { sessionId: session.id });
+
     return successResponse({ url: session.url }, 'Checkout session created successfully');
   } catch (error: any) {
+    logger.error("Stripe checkout session error", { error: error.message, stack: error.stack });
     console.error('Stripe checkout session error:', error);
     if (error instanceof SyntaxError) {
       return errorResponse('Invalid request body', 400);
