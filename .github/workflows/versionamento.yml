@@ -318,7 +318,7 @@ jobs:
         if: failure()
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: smtp-mail.outlook.com
+          server_address: smtp.gmail.com
           server_port: 587
           secure: false
           username: ${{ secrets.EMAIL_USERNAME }}
@@ -346,7 +346,7 @@ jobs:
         if: success()
         uses: dawidd6/action-send-mail@v3
         with:
-          server_address: smtp-mail.outlook.com
+          server_address: smtp.gmail.com
           server_port: 587
           secure: false
           username: ${{ secrets.EMAIL_USERNAME }}
