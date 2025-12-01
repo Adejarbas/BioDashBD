@@ -5,8 +5,8 @@ WORKDIR /app
 # Copy package files first for better caching
 COPY package*.json ./
 
-# Install dependencies (usando npm pois o projeto usa npm)
-RUN npm install --legacy-peer-deps
+# Install dependencies with legacy-peer-deps to handle winston/logtail conflicts
+RUN npm install --legacy-peer-deps --frozen-lockfile --production=false
 
 # Copy source code
 COPY . .
