@@ -1,0 +1,51 @@
+# docker-compose.yml para o Backend (BioDashBack)
+# Copie este arquivo para o repositório do seu backend
+
+version: '3.8'
+
+services:
+  biodash-backend:
+    # Opção 1: Build local (desenvolvimento)
+    build: .
+    # Opção 2: Usar imagem do Docker Hub (descomente a linha abaixo e comente o 'build: .')
+    # image: danielrodriguesadejarbas/biodash-backend:latest
+    ports:
+      - "3003:3003"
+    env_file:
+      - .env.local
+    environment:
+      - NODE_ENV=development
+      - FRONTEND_URL=http://biodash-frontend:3001
+      - NEXT_PUBLIC_SITE_URL=http://localhost:3001
+    networks:
+      - biodash-network
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  biodash-frontend:
+    image: biodash-front:latest
+    ports:
+      - "3001:3001"
+    environment:
+      - DOCKER_ENV=true
+      - NEXT_PUBLIC_API_BASE_URL=http://biodash-backend:3003
+      - NEXT_PUBLIC_SUPABASE_URL=https://scsldapnrzpjkyqkeiop.supabase.co
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjc2xkYXBucnpwamt5cWtlaW9wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1NTYyMzksImV4cCI6MjA3MTEzMjIzOX0.TxRPb6uaLdCCBdjvjKOghvaD7EBPlA2rZqTfh8gPdBw
+      - NEXT_PUBLIC_SITE_URL=http://localhost:3001
+    depends_on:
+      biodash-backend:
+        condition: service_healthy
+    networks:
+      - biodash-network
+
+networks:
+  biodash-network:
+    driver: bridge

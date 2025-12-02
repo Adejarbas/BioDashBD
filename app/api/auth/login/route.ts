@@ -9,20 +9,25 @@ import {
   isValidEmail,
   validateRequiredFields,
 } from "@/lib/api-response";
+const logger = require("@/lib/logger-winston");
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { email, password } = body;
 
+    logger.info("Login attempt", { email });
+
     // Validação de campos obrigatórios
     const requiredValidation = validateRequiredFields(body, ["email", "password"]);
     if (!requiredValidation.valid) {
+      logger.warn("Login validation failed", { email, errors: requiredValidation.errors });
       return validationErrorResponse(requiredValidation.errors);
     }
 
     // Validação de formato de email
     if (!isValidEmail(email)) {
+      logger.warn("Invalid email format", { email });
       return validationErrorResponse({
         email: ["Invalid email format"],
       });
@@ -51,12 +56,16 @@ export async function POST(req: NextRequest) {
         errorMessage = "Please confirm your email before signing in";
       }
 
+      logger.warn("Login failed", { email, error: errorMessage });
       return errorResponse(errorMessage, 401);
     }
 
     if (!data.user) {
+      logger.error("Authentication failed - no user returned", { email });
       return errorResponse("Failed to authenticate user", 500);
     }
+
+    logger.info("Login successful", { userId: data.user.id, email: data.user.email });
 
     // Retornar dados mínimos para o front com redirectTo
     return successResponse(
@@ -68,6 +77,7 @@ export async function POST(req: NextRequest) {
       "Login successful"
     );
   } catch (error: any) {
+    logger.error("Login error", { error: error.message, stack: error.stack });
     console.error("Login error:", error);
     if (error instanceof SyntaxError) {
       return errorResponse("Invalid request body", 400);
