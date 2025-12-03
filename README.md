@@ -474,7 +474,7 @@ docker pull danielrodriguesadejarbas/biodash-backend:latest
 
 ### Executando com Docker
 
-#### Opção 1: Usando Docker Compose (Recomendado)
+#### Opção 1: Usando Docker Compose (Recomendado) 
 
 ```bash
 # Build e executar
