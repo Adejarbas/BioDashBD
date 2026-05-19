@@ -1,61 +1,41 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import {
-  successResponse,
-  errorResponse,
-} from "@/lib/api-response";
+import { NextRequest } from "next/server";
+import pool from "@/lib/postgres/client";
+import { getTokenFromCookieHeader } from "@/lib/auth/jwt";
+import { successResponse, errorResponse } from "@/lib/api-response";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, { ...options, path: "/" });
-              });
-            } catch (error) {
-              // Cookies são automaticamente persistidos no App Router
-            }
-          },
-        },
-      }
-    );
+    const payload = getTokenFromCookieHeader(request.headers.get("cookie"));
 
-    // Verificar autenticação (opcional, dependendo do requisito)
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    // Busca o registro mais recente do usuário (ou de qualquer usuário para leitura global)
+    const userId = payload?.id;
 
-    // Se houver autenticação, filtrar por user_id se a tabela tiver esse campo
-    let query = supabase
-      .from("biodigester_indicators")
-      .select("name, current_value, unit, status")
-      .in("name", ["Energia Gerada", "Resíduos Processados", "Imposto Abatido"])
-      .order("created_at", { ascending: true });
-
-    const { data: indicators, error } = await query;
-
-    if (error) {
-      console.error("Database error:", error);
-      return errorResponse("Failed to fetch dashboard indicators", 500);
+    let result;
+    if (userId) {
+      result = await pool.query(
+        `SELECT
+           SUM(energy_generated) AS energy_generated,
+           SUM(waste_processed)  AS waste_processed,
+           SUM(tax_savings)      AS tax_savings
+         FROM biodigester_indicators
+         WHERE user_id = $1`,
+        [userId]
+      );
+    } else {
+      result = await pool.query(
+        `SELECT
+           SUM(energy_generated) AS energy_generated,
+           SUM(waste_processed)  AS waste_processed,
+           SUM(tax_savings)      AS tax_savings
+         FROM biodigester_indicators`
+      );
     }
 
+    const row = result.rows[0] || {};
     const dashboardData = {
-      energyGenerated:
-        indicators?.find((i) => i.name === "Energia Gerada")?.current_value || 0,
-      wasteProcessed:
-        indicators?.find((i) => i.name === "Resíduos Processados")?.current_value || 0,
-      taxSavings:
-        indicators?.find((i) => i.name === "Imposto Abatido")?.current_value || 0,
+      energyGenerated: Number(row.energy_generated) || 0,
+      wasteProcessed: Number(row.waste_processed) || 0,
+      taxSavings: Number(row.tax_savings) || 0,
     };
 
     return successResponse(dashboardData, "Dashboard indicators retrieved successfully");

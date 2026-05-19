@@ -1,39 +1,17 @@
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { successResponse, errorResponse } from "@/lib/api-response";
+import { NextResponse } from "next/server";
+import { successResponse } from "@/lib/api-response";
 
 export async function POST() {
-  try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, { ...options, path: "/" });
-              });
-            } catch (error) {
-              // Cookies são automaticamente persistidos no App Router
-            }
-          },
-        },
-      }
-    );
-    const { error } = await supabase.auth.signOut();
+  const response = successResponse(null, "Signed out successfully") as NextResponse;
 
-    if (error) {
-      return errorResponse("Failed to sign out", 500);
-    }
+  // Remove o cookie JWT
+  response.cookies.set("biodash_token", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 0, // expira imediatamente
+  });
 
-    return successResponse(null, "Signed out successfully");
-  } catch (error: any) {
-    console.error("Logout error:", error);
-    return errorResponse("An unexpected error occurred while signing out", 500);
-  }
+  return response;
 }
