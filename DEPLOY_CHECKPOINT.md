@@ -10,11 +10,11 @@ O `BioDashBD` é o **Next.js Dashboard** que roda na EC2 do backend.
 
 | Item | Valor |
 |---|---|
-| **EC2** | `98.92.12.89` |
+| **EC2** | `18.232.70.76` |
 | **Porta (host)** | `80` |
 | **Porta (container interno)** | `3003` |
 | **Mapeamento Docker** | `80:3003` |
-| **URL de acesso** | `http://98.92.12.89` |
+| **URL de acesso** | `http://18.232.70.76` |
 | **Imagem Docker** | `danielrodriguesadejarbas/biodash-backend:latest` |
 
 ---
@@ -23,7 +23,7 @@ O `BioDashBD` é o **Next.js Dashboard** que roda na EC2 do backend.
 
 | Arquivo | O que mudou |
 |---|---|
-| `middleware.ts` | CORS atualizado com IPs novos (`54.85.37.127` e `98.92.12.89`) |
+| `middleware.ts` | CORS atualizado com IPs novos (`54.159.82.145` e `18.232.70.76`) |
 | `next.config.js` | IPs de CORS atualizados |
 | `docker-compose.yml` | Porta `3003:3003` → `80:3003`; `NEXT_PUBLIC_SITE_URL` sem porta |
 | `Dockerfile` | `EXPOSE 3003` (interna); healthcheck corrigido |
@@ -42,21 +42,21 @@ Acesse: `github.com/Adejarbas/BioDashBD` → **Settings** → **Secrets and vari
 | `DOCKERHUB_TOKEN` | *(gerar em hub.docker.com → Account Settings → Security)* |
 | `POSTGRES_URL` | `postgresql://postgres:Biogen123!@database-1.cej6asnixj7d.us-east-1.rds.amazonaws.com:5432/postgres` |
 | `JWT_SECRET` | `biodash_jwt_secret_2024_change_in_production` |
-| `FRONTEND_URL` | `http://54.85.37.127` |
-| `NEXT_PUBLIC_API_BASE_URL` | `http://98.92.12.89:3003` |
+| `FRONTEND_URL` | `http://54.159.82.145` |
+| `NEXT_PUBLIC_API_BASE_URL` | `http://18.232.70.76:3003` |
 
 ### 2. Fazer push para main (gera a imagem Docker automaticamente)
 
 ```bash
 git add .
-git commit -m "feat: configuração AWS deploy"
+git commit -m "feat: atualização IPs AWS lab reiniciado"
 git push origin main
 ```
 
 ### 3. Deploy na EC2 (após a imagem estar no Docker Hub)
 
 ```bash
-ssh -i sua-chave.pem ec2-user@98.92.12.89
+ssh -i sua-chave.pem ec2-user@18.232.70.76
 
 docker pull danielrodriguesadejarbas/biodash-backend:latest
 
@@ -67,10 +67,10 @@ docker run -d \
   -e NODE_ENV=production \
   -e POSTGRES_URL="postgresql://postgres:Biogen123!@database-1.cej6asnixj7d.us-east-1.rds.amazonaws.com:5432/postgres" \
   -e JWT_SECRET="biodash_jwt_secret_2024_change_in_production" \
-  -e FRONTEND_URL="http://54.85.37.127" \
-  -e NEXT_PUBLIC_FRONTEND_URL="http://54.85.37.127" \
-  -e NEXT_PUBLIC_API_BASE_URL="http://98.92.12.89:3003" \
-  -e NEXT_PUBLIC_SITE_URL="http://98.92.12.89" \
+  -e FRONTEND_URL="http://54.159.82.145" \
+  -e NEXT_PUBLIC_FRONTEND_URL="http://54.159.82.145" \
+  -e NEXT_PUBLIC_API_BASE_URL="http://18.232.70.76:3003" \
+  -e NEXT_PUBLIC_SITE_URL="http://18.232.70.76" \
   danielrodriguesadejarbas/biodash-backend:latest
 ```
 
