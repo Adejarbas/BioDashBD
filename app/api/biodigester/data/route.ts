@@ -1,102 +1,65 @@
 export const runtime = 'nodejs';
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
-import {
-  successResponse,
-  unauthorizedResponse,
-  errorResponse,
-} from "@/lib/api-response"
+import { NextRequest } from "next/server";
+import pool from "@/lib/postgres/client";
+import { getTokenFromCookieHeader } from "@/lib/auth/jwt";
+import { successResponse, unauthorizedResponse, errorResponse } from "@/lib/api-response";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, { ...options, path: "/" });
-              });
-            } catch (error) {
-              // Cookies são automaticamente persistidos no App Router
-            }
-          },
-        },
-      }
-    )
+    const payload = getTokenFromCookieHeader(request.headers.get("cookie"));
+    if (!payload) return unauthorizedResponse("Unauthorized");
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return unauthorizedResponse("Unauthorized")
-    }
+    // Busca os últimos 30 registros do usuário em biodigester_indicators (schema RDS)
+    const { rows } = await pool.query(
+      `SELECT waste_processed, energy_generated, tax_savings, measured_at
+       FROM biodigester_indicators
+       WHERE user_id = $1
+       ORDER BY measured_at DESC
+       LIMIT 30`,
+      [payload.id]
+    );
 
-    const { data: biodigesterData, error } = await supabase
-      .from("biodigester_data")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("timestamp", { ascending: false })
-      .limit(30)
-
-    if (error) {
-      console.error("Database error:", error)
-      return errorResponse("Failed to fetch biodigester data", 500)
-    }
-
-    // Process data for charts
+    // Mapeia para o formato esperado pelo frontend
     const processedData = {
-      wasteProcessed:
-        biodigesterData
-          ?.slice(0, 7)
-          .reverse()
-          .map((item, index) => ({
-            month: new Date(item.timestamp).toLocaleDateString("pt-BR", { month: "short" }),
-            value: item.waste_processed || 0,
-          })) || [],
-      energyGenerated:
-        biodigesterData
-          ?.slice(0, 7)
-          .reverse()
-          .map((item, index) => ({
-            month: new Date(item.timestamp).toLocaleDateString("pt-BR", { month: "short" }),
-            value: item.energy_generated || 0,
-          })) || [],
+      wasteProcessed: rows
+        .slice(0, 7)
+        .reverse()
+        .map((item) => ({
+          month: new Date(item.measured_at).toLocaleDateString("pt-BR", { month: "short" }),
+          value: Number(item.waste_processed) || 0,
+        })),
+      energyGenerated: rows
+        .slice(0, 7)
+        .reverse()
+        .map((item) => ({
+          month: new Date(item.measured_at).toLocaleDateString("pt-BR", { month: "short" }),
+          value: Number(item.energy_generated) || 0,
+        })),
       stats: {
         wasteProcessed: {
-          value: biodigesterData?.[0]?.waste_processed?.toString() || "0",
+          value: rows[0]?.waste_processed?.toString() || "0",
           unit: "kg",
           change: "+12.5%",
           increasing: true,
         },
         energyGenerated: {
-          value: biodigesterData?.[0]?.energy_generated?.toString() || "0",
+          value: rows[0]?.energy_generated?.toString() || "0",
           unit: "kWh",
           change: "+8.2%",
           increasing: true,
         },
         efficiency: {
-          value: biodigesterData?.[0]?.efficiency_rate?.toString() || "0",
-          unit: "%",
+          value: rows[0]?.tax_savings?.toString() || "0",
+          unit: "R$",
           change: "+1.2%",
           increasing: true,
         },
       },
-    }
+    };
 
-    return successResponse(processedData, "Biodigester data retrieved successfully")
+    return successResponse(processedData, "Biodigester data retrieved successfully");
   } catch (error: any) {
-    console.error("Biodigester data error:", error)
-    return errorResponse("Internal server error", 500)
+    console.error("Biodigester data error:", error);
+    return errorResponse("Internal server error", 500);
   }
 }
-
-

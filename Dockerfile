@@ -2,24 +2,33 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY package*.json ./
-
-# Install dependencies with legacy-peer-deps to handle winston/logtail conflicts
-RUN npm install --legacy-peer-deps --frozen-lockfile --production=false
-
-# Copy source code
-COPY . .
-
-# Create .next directory and install curl
-RUN mkdir -p .next && chown -R node:node .next
+# Instala curl para health check
 RUN apk add --no-cache curl
 
-# Switch to non-root user
+# Copia manifesto de dependências
+COPY package*.json ./
+
+# Instala todas as dependências (inclui devDeps para o build TypeScript)
+RUN npm install --legacy-peer-deps
+
+# Copia código fonte
+COPY . .
+
+# Cria diretório .next e define permissões
+RUN mkdir -p .next && chown -R node:node .next
+
+# Switch para usuário não-root
 USER node
 
-# Expose port
+# Build da aplicação Next.js
+RUN npm run build
+
+# Expõe a porta interna do Next.js (docker-compose mapeia 80:3003)
 EXPOSE 3003
 
-# Start the application
-CMD ["npm", "run", "dev"]
+# Health check — testa a porta interna do container
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:3003/api/health || exit 1
+
+# Inicia em modo produção
+CMD ["npm", "run", "start"]

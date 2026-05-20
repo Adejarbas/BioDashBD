@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev -p 3003",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3003",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -29,9 +29,12 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.76.1",
+    "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.3",
     "next": "^16.0.0",
+    "pg": "^8.11.5",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "stripe": "^19.1.0",
@@ -42,7 +45,10 @@
     "yaml": "^2.8.1"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^24.9.1",
+    "@types/pg": "^8.11.6",
     "@types/react": "^19.2.2",
     "typescript": "5.9.3"
   }

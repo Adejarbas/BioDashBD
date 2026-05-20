@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-import { createCookieHandlers } from "@/lib/supabase/server";
+import bcrypt from "bcryptjs";
+import pool from "@/lib/postgres/client";
+import { signToken } from "@/lib/auth/jwt";
 import {
   successResponse,
   errorResponse,
@@ -18,70 +18,57 @@ export async function POST(req: NextRequest) {
 
     logger.info("Login attempt", { email });
 
-    // Validação de campos obrigatórios
     const requiredValidation = validateRequiredFields(body, ["email", "password"]);
     if (!requiredValidation.valid) {
       logger.warn("Login validation failed", { email, errors: requiredValidation.errors });
       return validationErrorResponse(requiredValidation.errors);
     }
 
-    // Validação de formato de email
     if (!isValidEmail(email)) {
-      logger.warn("Invalid email format", { email });
-      return validationErrorResponse({
-        email: ["Invalid email format"],
-      });
+      return validationErrorResponse({ email: ["Invalid email format"] });
     }
 
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: createCookieHandlers(cookieStore),
-      }
+    // Busca usuário no PostgreSQL RDS
+    const result = await pool.query(
+      "SELECT id, email, password_hash FROM users WHERE email = $1",
+      [email.trim().toLowerCase()]
     );
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-
-    if (error) {
-      // Mapear erros comuns do Supabase para mensagens mais amigáveis
-      let errorMessage = error.message;
-      if (error.message.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password";
-      } else if (error.message.includes("Email not confirmed")) {
-        errorMessage = "Please confirm your email before signing in";
-      }
-
-      logger.warn("Login failed", { email, error: errorMessage });
-      return errorResponse(errorMessage, 401);
+    if (result.rows.length === 0) {
+      logger.warn("Login failed - user not found", { email });
+      return errorResponse("Invalid email or password", 401);
     }
 
-    if (!data.user) {
-      logger.error("Authentication failed - no user returned", { email });
-      return errorResponse("Failed to authenticate user", 500);
+    const user = result.rows[0];
+    const valid = await bcrypt.compare(password, user.password_hash);
+    if (!valid) {
+      logger.warn("Login failed - wrong password", { email });
+      return errorResponse("Invalid email or password", 401);
     }
 
-    logger.info("Login successful", { userId: data.user.id, email: data.user.email });
+    const token = signToken({ id: user.id, email: user.email });
 
-    // Retornar dados mínimos para o front com redirectTo
-    return successResponse(
-      {
-        userId: data.user.id,
-        email: data.user.email,
-        redirectTo: "/dashboard",
-      },
+    logger.info("Login successful", { userId: user.id, email: user.email });
+
+    const response = successResponse(
+      { userId: user.id, email: user.email, redirectTo: "/dashboard" },
       "Login successful"
     );
+
+    // Define o JWT em cookie httpOnly
+    (response as NextResponse).cookies.set("biodash_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 dias
+    });
+
+    return response;
   } catch (error: any) {
-    logger.error("Login error", { error: error.message, stack: error.stack });
+    logger.error("Login error", { error: error.message });
     console.error("Login error:", error);
-    if (error instanceof SyntaxError) {
-      return errorResponse("Invalid request body", 400);
-    }
+    if (error instanceof SyntaxError) return errorResponse("Invalid request body", 400);
     return errorResponse("An unexpected error occurred", 500);
   }
 }

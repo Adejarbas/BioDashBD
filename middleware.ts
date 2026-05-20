@@ -1,41 +1,40 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { verifyToken } from "@/lib/auth/jwt";
 
 // Remove barra final se existir na origem
 function normalizeOrigin(origin: string) {
   return origin.endsWith("/") ? origin.slice(0, -1) : origin;
 }
 
-// Permitir múltiplas origens (dev e produção)
+// Origens permitidas: dashboard frontend + mobile frontend
 const ALLOWED_ORIGINS = [
-  normalizeOrigin(process.env.FRONTEND_URL || "http://localhost:3001"),
-  normalizeOrigin(process.env.NEXT_PUBLIC_FRONTEND_URL || "http://localhost:3001"),
-].filter((origin, index, self) => self.indexOf(origin) === index); // Remove duplicatas
+  "http://54.159.82.145",          // EC2 Frontend Mobile
+  "http://54.159.82.145:80",       // EC2 Frontend Mobile porta 80
+  "http://18.232.70.76",           // EC2 Backend/Dashboard
+  "http://18.232.70.76:3003",      // EC2 Backend porta Express
+  "http://localhost:3001",         // Dev local dashboard
+  "http://localhost:3003",         // Dev local backend
+].map(normalizeOrigin);
 
 function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false;
-  const normalized = normalizeOrigin(origin);
-  return ALLOWED_ORIGINS.some(allowed => allowed === normalized);
+  return ALLOWED_ORIGINS.includes(normalizeOrigin(origin));
 }
 
 export async function middleware(req: NextRequest) {
-  // Preflight CORS para /api
+  const origin = req.headers.get("origin");
 
   // CORS Preflight para /api
   if (req.method === "OPTIONS" && req.nextUrl.pathname.startsWith("/api")) {
-    const origin = req.headers.get("origin");
     const resPre = new NextResponse(null, { status: 204 });
-    
     if (origin && isAllowedOrigin(origin)) {
-      const normalizedOrigin = normalizeOrigin(origin);
-      resPre.headers.set("Access-Control-Allow-Origin", normalizedOrigin);
+      resPre.headers.set("Access-Control-Allow-Origin", normalizeOrigin(origin));
       resPre.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
       resPre.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
       resPre.headers.set("Access-Control-Allow-Credentials", "true");
       resPre.headers.set("Vary", "Origin");
     }
-    
     return resPre;
   }
 
@@ -43,45 +42,33 @@ export async function middleware(req: NextRequest) {
 
   // CORS em rotas /api
   if (req.nextUrl.pathname.startsWith("/api")) {
-    const origin = req.headers.get("origin");
-    
     if (origin && isAllowedOrigin(origin)) {
-      const normalizedOrigin = normalizeOrigin(origin);
-      res.headers.set("Access-Control-Allow-Origin", normalizedOrigin);
+      res.headers.set("Access-Control-Allow-Origin", normalizeOrigin(origin));
       res.headers.set("Access-Control-Allow-Credentials", "true");
       res.headers.set("Vary", "Origin");
     }
   }
 
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return res;
-  }
-
-  // Proteção /dashboard
+  // Proteção /dashboard — verifica JWT no cookie
   if (req.nextUrl.pathname.startsWith("/dashboard")) {
-    try {
-      const supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-          cookies: {
-            getAll: () => req.cookies.getAll(),
-            setAll: (cookiesToSet) => {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                res.cookies.set(name, value, { ...(options || {}), path: "/" })
-              );
-            },
-          },
-        }
-      );
-      const { data } = await supabase.auth.getUser();
-      if (!(data as any)?.user) {
-        const loginUrl = new URL("/login", req.url);
-        loginUrl.searchParams.set("next", req.nextUrl.pathname + (req.nextUrl.search || ""));
-        return NextResponse.redirect(loginUrl);
+    const cookieHeader = req.headers.get("cookie") || "";
+    const match = cookieHeader.match(/biodash_token=([^;]+)/);
+    const token = match ? match[1] : null;
+
+    let authenticated = false;
+    if (token) {
+      try {
+        verifyToken(token);
+        authenticated = true;
+      } catch {
+        authenticated = false;
       }
-    } catch {
-      // fail-open
+    }
+
+    if (!authenticated) {
+      const loginUrl = new URL("/login", req.url);
+      loginUrl.searchParams.set("next", req.nextUrl.pathname + (req.nextUrl.search || ""));
+      return NextResponse.redirect(loginUrl);
     }
   }
 
