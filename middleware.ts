@@ -9,10 +9,10 @@ function normalizeOrigin(origin: string) {
 
 // Origens permitidas: dashboard frontend + mobile frontend
 const ALLOWED_ORIGINS = [
-  "http://54.242.220.252",        // EC2 Frontend Mobile
-  "http://54.242.220.252:8080",   // EC2 Frontend Mobile (porta nginx)
-  "http://3.80.238.82",           // EC2 Backend/Dashboard
-  "http://3.80.238.82:3003",      // EC2 Backend porta
+  "http://54.85.37.127",          // EC2 Frontend Mobile (novo IP)
+  "http://54.85.37.127:80",       // EC2 Frontend Mobile porta 80
+  "http://98.92.12.89",           // EC2 Backend/Dashboard (novo IP)
+  "http://98.92.12.89:3003",      // EC2 Backend porta
   "http://localhost:3001",        // Dev local dashboard
   "http://localhost:3003",        // Dev local backend
 ].map(normalizeOrigin);

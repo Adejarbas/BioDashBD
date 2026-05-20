@@ -23,10 +23,10 @@ USER node
 # Build da aplicação Next.js
 RUN npm run build
 
-# Expõe a porta
+# Expõe a porta interna do Next.js (docker-compose mapeia 80:3003)
 EXPOSE 3003
 
-# Health check
+# Health check — testa a porta interna do container
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:3003/api/health || exit 1
 
