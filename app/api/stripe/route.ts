@@ -9,13 +9,13 @@ const env = (typeof globalThis !== "undefined" && (globalThis as any).process &&
   ? (globalThis as any).process.env
   : ({} as Record<string, string | undefined>);
 
-const stripe = new Stripe(env.STRIPE_SECRET_KEY || env.SECRET_STRIPE_KEY || '');
-
 export async function POST(req: NextRequest) {
   try {
     if (!env.STRIPE_SECRET_KEY && !env.SECRET_STRIPE_KEY) {
       return errorResponse('Stripe not configured', 501);
     }
+    
+    const stripe = new Stripe(env.STRIPE_SECRET_KEY || env.SECRET_STRIPE_KEY || '');
 
     const session = await stripe.checkout.sessions.create({
       line_items: [
