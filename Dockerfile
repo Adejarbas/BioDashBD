@@ -14,8 +14,9 @@ RUN npm install --legacy-peer-deps
 # Copia código fonte
 COPY . .
 
-# Cria diretório .next e define permissões
-RUN mkdir -p .next && chown -R node:node .next
+# Garante permissões para o usuário node em todo o diretório de trabalho
+# (necessário para o Next.js escrever next-env.d.ts durante o TypeScript check)
+RUN mkdir -p .next && chown -R node:node /app
 
 # Switch para usuário não-root
 USER node
