@@ -1,4 +1,4 @@
-name: Backend CI / CD
+name: Dashboard CI / CD (Next.js)
 
 permissions:
   contents: write
@@ -166,8 +166,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/biodash-backend:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/biodash-backend:${{ steps.version.outputs.new_version }}
+            thiagohmn93/biodashbd:latest
+            thiagohmn93/biodashbd:${{ steps.version.outputs.new_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

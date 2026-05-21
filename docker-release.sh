@@ -15,7 +15,7 @@ Uso:
   ./docker-release.sh
   ./docker-release.sh 0.8.1
   ./docker-release.sh 0.8.1 --push
-  ./docker-release.sh 0.8.1 --push danielrodriguesadejarbas/biodash-backend
+  ./docker-release.sh 0.8.1 --push thiagohmn93/biodashbd
 
 Fluxo semiautomatico:
   ./docker-release.sh --auto patch --push
@@ -31,7 +31,7 @@ Opcoes:
 EOF
 }
 
-IMAGE_NAME="danielrodriguesadejarbas/biodash-backend"
+IMAGE_NAME="thiagohmn93/biodashbd"
 VERSION=""
 PUSH_FLAG=""
 AUTO_BUMP=""
