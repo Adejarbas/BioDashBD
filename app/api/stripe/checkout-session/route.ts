@@ -12,8 +12,7 @@ const env = (typeof globalThis !== "undefined" && (globalThis as any).process &&
   ? (globalThis as any).process.env
   : ({} as Record<string, string | undefined>);
 
-// Use as chaves do ambiente (não exponha chaves secretas no repositório).
-const stripe = new Stripe(env.STRIPE_SECRET_KEY || env.SECRET_STRIPE_KEY || '');
+// As chaves são validadas e usadas dentro do handler (evita erro no momento de build do Next.js)
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Receber dados do produto via body
+    const stripe = new Stripe(env.STRIPE_SECRET_KEY || env.SECRET_STRIPE_KEY || '');
     const body = await req.json().catch(() => ({}));
     const { productName, amount } = body;
 
