@@ -295,7 +295,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image (backend)
         if: steps.version.outputs.should_deploy == 'true' && github.ref == 'refs/heads/main'
@@ -305,8 +305,8 @@ jobs:
             file: ./Dockerfile
             push: true
             tags: |
-              danielrodriguesadejarbas/biodash-backend:latest
-              danielrodriguesadejarbas/biodash-backend:v${{ steps.version.outputs.new_version }}
+              thiagohmn93/biodashbd:latest
+              thiagohmn93/biodashbd:v${{ steps.version.outputs.new_version }}
             build-args: |
               NODE_ENV=production
               NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
