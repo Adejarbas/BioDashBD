@@ -15,7 +15,7 @@ O `BioDashBD` é o **Next.js Dashboard** que roda na EC2 do backend.
 | **Porta (container interno)** | `3003` |
 | **Mapeamento Docker** | `80:3003` |
 | **URL de acesso** | `http://18.232.70.76` |
-| **Imagem Docker** | `danielrodriguesadejarbas/biodash-backend:latest` |
+| **Imagem Docker** | `thiagohmn93/biodash-backend:latest` |
 
 ---
 
@@ -58,7 +58,7 @@ git push origin main
 ```bash
 ssh -i sua-chave.pem ec2-user@18.232.70.76
 
-docker pull danielrodriguesadejarbas/biodash-backend:latest
+docker pull thiagohmn93/biodash-backend:latest
 
 docker run -d \
   --name biodash_nextjs \
@@ -71,7 +71,7 @@ docker run -d \
   -e NEXT_PUBLIC_FRONTEND_URL="http://54.159.82.145" \
   -e NEXT_PUBLIC_API_BASE_URL="http://18.232.70.76:3003" \
   -e NEXT_PUBLIC_SITE_URL="http://18.232.70.76" \
-  danielrodriguesadejarbas/biodash-backend:latest
+  thiagohmn93/biodash-backend:latest
 ```
 
 ---

@@ -465,7 +465,7 @@ npm run test:watch
 A imagem oficial do BioDashBD está disponível no Docker Hub:
 
 ```bash
-docker pull danielrodriguesadejarbas/biodash-backend:latest
+docker pull thiagohmn93/biodash-backend:latest
 ```
 
 **Tags disponíveis:**
@@ -493,7 +493,7 @@ docker-compose logs -f biodash-backend
 # Usando imagem do Docker Hub
 docker run -p 3003:3003 \
   --env-file .env.local \
-  danielrodriguesadejarbas/biodash-backend:latest
+  thiagohmn93/biodash-backend:latest
 
 # Ou fazer build local
 docker build -t biodash-backend .
@@ -507,7 +507,7 @@ O projeto possui pipeline automatizado que:
 - ✅ Faz build e push da imagem Docker para o Docker Hub
 - ✅ Envia notificações por e-mail (sucesso/falha)
 
-**Repositório Docker Hub**: `danielrodriguesadejarbas/biodash-backend`
+**Repositório Docker Hub**: `thiagohmn93/biodash-backend`
 
 ### Documentação Completa
 
