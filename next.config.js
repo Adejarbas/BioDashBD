@@ -7,10 +7,10 @@ module.exports = {
   async headers() {
     const origins = [
       process.env.FRONTEND_URL || 'http://localhost:3001',
-      'http://98.83.234.240',
-      'http://98.83.234.240:80',
-      'http://100.30.203.65',
-      'http://100.30.203.65:3003',
+      'http://35.168.73.23',
+      'http://35.168.73.23:80',
+      'http://44.196.163.18',
+      'http://44.196.163.18:3003',
     ].filter(Boolean).join(',');
     return [
       {
