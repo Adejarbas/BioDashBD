@@ -9,6 +9,7 @@ function normalizeOrigin(origin: string) {
 
 // Origens permitidas: dashboard frontend + mobile frontend
 const ALLOWED_ORIGINS = [
+  process.env.FRONTEND_URL,
   "http://35.168.73.23",           // EC2 Frontend
   "http://35.168.73.23:80",        // EC2 Frontend porta 80
   "http://35.168.73.23:3001",      // EC2 Frontend porta 3001
@@ -16,7 +17,7 @@ const ALLOWED_ORIGINS = [
   "http://44.196.163.18:3003",     // EC2 Backend porta 3003
   "http://localhost:3001",         // Dev local frontend
   "http://localhost:3003",         // Dev local backend
-].map(normalizeOrigin);
+].filter(Boolean).map(url => normalizeOrigin(url as string));
 
 function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false;

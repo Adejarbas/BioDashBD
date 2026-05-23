@@ -3,8 +3,8 @@ import { cookies } from "next/headers";
 import type { ReadonlyRequestCookies } from "next/dist/server/web/spec-extension/adapters/request-cookies";
 
 export const isSupabaseConfigured = !!(
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_URL &&
+  process.env.SUPABASE_ANON_KEY
 );
 
 /**
@@ -13,7 +13,7 @@ export const isSupabaseConfigured = !!(
  */
 export function getCookieOptions(options?: CookieOptions): CookieOptions {
   const isProduction = process.env.NODE_ENV === 'production';
-  const isSecure = isProduction || process.env.NEXT_PUBLIC_API_BASE_URL?.startsWith('https');
+  const isSecure = isProduction || process.env.API_BASE_URL?.startsWith('https');
   
   return {
     ...options,
@@ -48,8 +48,8 @@ export async function createClient() {
   const cookieStore = await cookies();
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
     {
       cookies: createCookieHandlers(cookieStore),
     }

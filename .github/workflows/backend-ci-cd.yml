@@ -171,6 +171,31 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Deploy to EC2
+        if: steps.version.outputs.should_deploy == 'true' && github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull thiagohmn93/biodashbd:latest
+            docker stop biodashbd || true
+            docker rm biodashbd || true
+            docker run -d \
+              --name biodashbd \
+              -p 3003:3003 \
+              -e NODE_ENV=production \
+              -e POSTGRES_URL="${{ secrets.POSTGRES_URL }}" \
+              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+              -e FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
+              -e API_BASE_URL="${{ secrets.API_BASE_URL }}" \
+              -e SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+              -e SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
+              -e LOGTAIL_TOKEN="${{ secrets.LOGTAIL_TOKEN }}" \
+              -e LOGTAIL_URL="${{ secrets.LOGTAIL_URL }}" \
+              thiagohmn93/biodashbd:latest
+
       # Envio de e-mail quando pipeline FALHAR
       # - name: Enviar email se falhar
       #   if: failure()
