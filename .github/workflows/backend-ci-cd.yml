@@ -184,7 +184,7 @@ jobs:
             docker rm biodashbd || true
             docker run -d \
               --name biodashbd \
-              -p 3003:3003 \
+              -p 80:3003 \
               -e NODE_ENV=production \
               -e POSTGRES_URL="${{ secrets.POSTGRES_URL }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
@@ -195,6 +195,7 @@ jobs:
               -e LOGTAIL_TOKEN="${{ secrets.LOGTAIL_TOKEN }}" \
               -e LOGTAIL_URL="${{ secrets.LOGTAIL_URL }}" \
               thiagohmn93/biodashbd:latest
+            docker image prune -f
 
       # Envio de e-mail quando pipeline FALHAR
       # - name: Enviar email se falhar
