@@ -184,7 +184,9 @@ jobs:
             docker rm biodashbd || true
             docker run -d \
               --name biodashbd \
+              --restart unless-stopped \
               -p 80:3003 \
+              -p 3003:3003 \
               -e NODE_ENV=production \
               -e POSTGRES_URL="${{ secrets.POSTGRES_URL }}" \
               -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
