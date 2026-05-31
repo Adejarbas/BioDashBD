@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           persist-credentials: true
@@ -148,38 +148,39 @@ jobs:
           fi
 
       - name: Set up Docker Buildx
-        if: steps.version.outputs.should_deploy == 'true' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: docker/setup-buildx-action@v3
 
       - name: Login to Docker Hub
-        if: steps.version.outputs.should_deploy == 'true' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push Docker image
-        if: steps.version.outputs.should_deploy == 'true' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
+          no-cache: true
           tags: |
-            thiagohmn93/biodashbd:latest
-            thiagohmn93/biodashbd:${{ steps.version.outputs.new_version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/biodashbd:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/biodashbd:${{ steps.version.outputs.new_version }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Deploy to EC2
-        if: steps.version.outputs.should_deploy == 'true' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull thiagohmn93/biodashbd:latest
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/biodashbd:latest
             docker stop biodashbd || true
             docker rm biodashbd || true
             docker run -d \
@@ -201,13 +202,13 @@ jobs:
               -e NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
               -e LOGTAIL_TOKEN="${{ secrets.LOGTAIL_TOKEN }}" \
               -e LOGTAIL_URL="${{ secrets.LOGTAIL_URL }}" \
-              thiagohmn93/biodashbd:latest
+              ${{ secrets.DOCKERHUB_USERNAME }}/biodashbd:latest
             docker image prune -f
 
       # Envio de e-mail quando pipeline FALHAR
       # - name: Enviar email se falhar
       #   if: failure()
-      #   uses: dawidd6/action-send-mail@v3
+      #   uses: dawidd6/action-send-mail@v4
       #   with:
       #     server_address: smtp.gmail.com
       #     server_port: 587
@@ -235,7 +236,7 @@ jobs:
       # Envio de e-mail quando pipeline tiver SUCESSO
       # - name: Enviar email de sucesso
       #   if: success()
-      #   uses: dawidd6/action-send-mail@v3
+      #   uses: dawidd6/action-send-mail@v4
       #   with:
       #     server_address: smtp.gmail.com
       #     server_port: 587
