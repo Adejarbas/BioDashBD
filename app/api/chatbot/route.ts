@@ -16,6 +16,9 @@ export async function POST(request: NextRequest) {
     if (!message) return errorResponse("A mensagem é obrigatória.", 400);
     if (message.length > 500) return errorResponse("A mensagem deve ter no máximo 500 caracteres.", 400);
 
+    const history = Array.isArray(body?.history) ? body.history : [];
+    const context = body?.context && typeof body.context === "object" ? body.context : undefined;
+
     const [markers, indicators] = await Promise.all([
       getUserMarkers(user.id),
       getUserIndicators(user.id),
@@ -23,7 +26,7 @@ export async function POST(request: NextRequest) {
     const answer = await requestAi<any>("/chatbot", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, markers, indicators }),
+      body: JSON.stringify({ message, history, context, markers, indicators }),
     });
     return successResponse(answer);
   } catch (error: any) {
