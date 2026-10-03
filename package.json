@@ -1,6 +1,6 @@
 {
   "name": "biodashbd",
-  "version": "0.3.6",
+  "version": "0.4.0",
   "description": "Backend",
   "main": "index.js",
   "directories": {
