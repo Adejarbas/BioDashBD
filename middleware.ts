@@ -16,6 +16,10 @@ const ALLOWED_ORIGINS = [
   "http://44.196.163.18",          // EC2 Backend
   "http://44.196.163.18:3003",     // EC2 Backend porta 3003
   "http://localhost:3001",         // Dev local frontend
+  "http://localhost:8081",         // Expo Web
+  "http://localhost:19006",        // Expo Web (porta legada)
+  "http://127.0.0.1:8081",
+  "http://127.0.0.1:19006",
   "http://localhost:3003",         // Dev local backend
 ].filter(Boolean).map(url => normalizeOrigin(url as string));
 

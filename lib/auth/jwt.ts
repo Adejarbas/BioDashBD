@@ -34,3 +34,19 @@ export function getTokenFromCookieHeader(cookieHeader: string | null): JwtPayloa
     return null;
   }
 }
+
+/** Aceita o Bearer token do app mobile/web e mantém compatibilidade com cookie. */
+export function getTokenFromRequest(request: Request): JwtPayload | null {
+  const authorization = request.headers.get('authorization');
+  if (authorization?.startsWith('Bearer ')) {
+    const token = authorization.slice(7).trim();
+    if (token) {
+      try {
+        return verifyToken(token);
+      } catch {
+        return null;
+      }
+    }
+  }
+  return getTokenFromCookieHeader(request.headers.get('cookie'));
+}

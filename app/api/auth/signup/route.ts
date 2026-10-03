@@ -70,7 +70,13 @@ export async function POST(req: NextRequest) {
     const token = signToken({ id: user.id, email: user.email });
 
     const response = successResponse(
-      { userId: user.id, email: user.email, redirectTo: "/dashboard" },
+      {
+        token,
+        user: { id: user.id, email: user.email },
+        userId: user.id,
+        email: user.email,
+        redirectTo: "/dashboard",
+      },
       "Account created successfully!"
     ) as NextResponse;
 

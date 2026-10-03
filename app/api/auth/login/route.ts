@@ -51,7 +51,13 @@ export async function POST(req: NextRequest) {
     logger.info("Login successful", { userId: user.id, email: user.email });
 
     const response = successResponse(
-      { userId: user.id, email: user.email, redirectTo: "/dashboard" },
+      {
+        token,
+        user: { id: user.id, email: user.email },
+        userId: user.id,
+        email: user.email,
+        redirectTo: "/dashboard",
+      },
       "Login successful"
     );
 
