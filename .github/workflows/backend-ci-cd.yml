@@ -172,38 +172,39 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Deploy to EC2
-        if: github.ref == 'refs/heads/main'
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/biodashbd:latest
-            docker stop biodashbd || true
-            docker rm biodashbd || true
-            docker run -d \
-              --name biodashbd \
-              --restart unless-stopped \
-              -p 80:3003 \
-              -p 3003:3003 \
-              -e NODE_ENV=production \
-              -e POSTGRES_URL="${{ secrets.POSTGRES_URL }}" \
-              -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
-              -e FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
-              -e API_BASE_URL="${{ secrets.API_BASE_URL }}" \
-              -e NEXT_PUBLIC_API_BASE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" \
-              -e NEXT_PUBLIC_SITE_URL="${{ secrets.NEXT_PUBLIC_SITE_URL }}" \
-              -e NEXT_PUBLIC_FRONTEND_URL="${{ secrets.NEXT_PUBLIC_FRONTEND_URL }}" \
-              -e SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
-              -e SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
-              -e STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
-              -e NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
-              -e LOGTAIL_TOKEN="${{ secrets.LOGTAIL_TOKEN }}" \
-              -e LOGTAIL_URL="${{ secrets.LOGTAIL_URL }}" \
-              ${{ secrets.DOCKERHUB_USERNAME }}/biodashbd:latest
-            docker image prune -f
+      # Deploy legado na AWS EC2 desativado (Migração para Azure Container Apps em andamento)
+      # - name: Deploy to EC2
+      #   if: github.ref == 'refs/heads/main'
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ secrets.EC2_HOST }}
+      #     username: ${{ secrets.EC2_USER }}
+      #     key: ${{ secrets.EC2_SSH_KEY }}
+      #     script: |
+      #       docker pull ${{ secrets.DOCKERHUB_USERNAME }}/biodashbd:latest
+      #       docker stop biodashbd || true
+      #       docker rm biodashbd || true
+      #       docker run -d \
+      #         --name biodashbd \
+      #         --restart unless-stopped \
+      #         -p 80:3003 \
+      #         -p 3003:3003 \
+      #         -e NODE_ENV=production \
+      #         -e POSTGRES_URL="${{ secrets.POSTGRES_URL }}" \
+      #         -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+      #         -e FRONTEND_URL="${{ secrets.FRONTEND_URL }}" \
+      #         -e API_BASE_URL="${{ secrets.API_BASE_URL }}" \
+      #         -e NEXT_PUBLIC_API_BASE_URL="${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" \
+      #         -e NEXT_PUBLIC_SITE_URL="${{ secrets.NEXT_PUBLIC_SITE_URL }}" \
+      #         -e NEXT_PUBLIC_FRONTEND_URL="${{ secrets.NEXT_PUBLIC_FRONTEND_URL }}" \
+      #         -e SUPABASE_URL="${{ secrets.SUPABASE_URL }}" \
+      #         -e SUPABASE_ANON_KEY="${{ secrets.SUPABASE_ANON_KEY }}" \
+      #         -e STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}" \
+      #         -e NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY="${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}" \
+      #         -e LOGTAIL_TOKEN="${{ secrets.LOGTAIL_TOKEN }}" \
+      #         -e LOGTAIL_URL="${{ secrets.LOGTAIL_URL }}" \
+      #         ${{ secrets.DOCKERHUB_USERNAME }}/biodashbd:latest
+      #       docker image prune -f
 
       # Envio de e-mail quando pipeline FALHAR
       # - name: Enviar email se falhar
