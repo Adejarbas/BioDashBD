@@ -1,5 +1,5 @@
 -- ============================================================
--- BioDash - Schema PostgreSQL (AWS RDS)
+-- BioDash - Schema PostgreSQL (Azure Database for PostgreSQL Flexible Server)
 -- Execute este script no seu banco de dados PostgreSQL
 -- ============================================================
 
