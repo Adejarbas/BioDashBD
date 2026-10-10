@@ -7,28 +7,37 @@ function normalizeOrigin(origin: string) {
   return origin.endsWith("/") ? origin.slice(0, -1) : origin;
 }
 
-// Origens permitidas: dashboard frontend + mobile frontend
-const ALLOWED_ORIGINS = [
-  process.env.FRONTEND_URL,
-  "http://localhost",              // Front web no Docker porta 80
-  "http://localhost:80",
-  "http://localhost:3000",
-  "http://localhost:3001",         // Dev local frontend
-  "http://localhost:8081",         // Expo Web
-  "http://localhost:19006",        // Expo Web (porta legada)
-  "http://127.0.0.1",
-  "http://127.0.0.1:80",
-  "http://127.0.0.1:3000",
-  "http://127.0.0.1:3001",
-  "http://127.0.0.1:8081",
-  "http://127.0.0.1:19006",
-  "http://localhost:3003",         // Dev local backend
-].filter(Boolean).map(url => normalizeOrigin(url as string));
+function getAllowedOrigins(): string[] {
+  const envUrls = (process.env.FRONTEND_URL || "")
+    .split(",")
+    .map(u => u.trim())
+    .filter(Boolean);
+
+  const staticOrigins = [
+    ...envUrls,
+    "http://localhost",              // Front web no Docker porta 80
+    "http://localhost:80",
+    "http://localhost:3000",
+    "http://localhost:3001",         // Dev local frontend
+    "http://localhost:8081",         // Expo Web
+    "http://localhost:19006",        // Expo Web (porta legada)
+    "http://127.0.0.1",
+    "http://127.0.0.1:80",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://127.0.0.1:8081",
+    "http://127.0.0.1:19006",
+    "http://localhost:3003",         // Dev local backend
+  ];
+
+  return staticOrigins.map(url => normalizeOrigin(url));
+}
 
 function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false;
   const normalized = normalizeOrigin(origin);
-  if (ALLOWED_ORIGINS.includes(normalized)) return true;
+  const allowed = getAllowedOrigins();
+  if (allowed.includes(normalized)) return true;
 
   // Permite qualquer localhost ou 127.0.0.1 em qualquer porta
   if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(normalized)) return true;
@@ -41,6 +50,15 @@ function isAllowedOrigin(origin: string | null): boolean {
 
 export async function middleware(req: NextRequest) {
   const origin = req.headers.get("origin");
+
+  // Log temporário de CORS e FRONTEND_URL em rotas /api
+  if (req.nextUrl.pathname.startsWith("/api")) {
+    const allowed = getAllowedOrigins();
+    console.log(`[CORS DEBUG] Request: ${req.method} ${req.nextUrl.pathname}`);
+    console.log(`[CORS DEBUG] Request Origin: "${origin}" | Is Allowed: ${isAllowedOrigin(origin)}`);
+    console.log(`[CORS DEBUG] FRONTEND_URL env: "${process.env.FRONTEND_URL}"`);
+    console.log(`[CORS DEBUG] Allowed Origins:`, allowed);
+  }
 
   // CORS Preflight para /api
   if (req.method === "OPTIONS" && req.nextUrl.pathname.startsWith("/api")) {
