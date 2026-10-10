@@ -9,3 +9,5 @@ CREDENTIALS_FOR_TESTING.md
 .vercel
 node_modules
 .next
+
+*.tsbuildinfo
