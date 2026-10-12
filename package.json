@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev -p 3003",
     "build": "next build",
+    "typecheck": "tsc --noEmit",
     "start": "next start -p 3003",
     "test": "echo \"Error: no test specified\" && exit 1",
     "docker:up": "docker compose up -d",
@@ -29,6 +30,7 @@
   },
   "homepage": "https://github.com/Adejarbas/BioDashBD#readme",
   "dependencies": {
+    "@azure/monitor-opentelemetry": "^1.8.0",
     "@azure/storage-blob": "^12.34.0",
     "@logtail/node": "^0.5.6",
     "@logtail/winston": "^0.5.6",
