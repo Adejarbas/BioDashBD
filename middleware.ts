@@ -47,7 +47,7 @@ export async function middleware(req: NextRequest) {
     const resPre = new NextResponse(null, { status: 204 });
     if (origin && isAllowedOrigin(origin)) {
       resPre.headers.set("Access-Control-Allow-Origin", normalizeOrigin(origin));
-      resPre.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+      resPre.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
       resPre.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
       resPre.headers.set("Access-Control-Allow-Credentials", "true");
       resPre.headers.set("Vary", "Origin");
