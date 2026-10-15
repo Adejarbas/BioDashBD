@@ -1,6 +1,6 @@
 /**
  * Instrumentação e Inicialização do OpenTelemetry para Azure Monitor / Application Insights
- * Padrões Abertos (OTel) sem acoplamento proprietário da AWS (CloudWatch / AWS X-Ray removidos).
+ * Padrões Abertos (OTel) com rastreamento distribuído e telemetria nativa no Azure Monitor.
  */
 import { useAzureMonitor } from '@azure/monitor-opentelemetry';
 
