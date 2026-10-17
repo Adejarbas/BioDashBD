@@ -12,25 +12,10 @@ const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const mongoose = require('mongoose');
 
-const getSeedPoolConfig = () => {
-    const rawUrl = process.env.POSTGRES_URL;
-    if (!rawUrl) return {};
-    let sanitized = rawUrl;
-    try {
-        const u = new URL(rawUrl);
-        u.searchParams.delete('sslmode');
-        u.searchParams.delete('ssl');
-        sanitized = u.toString();
-    } catch {
-        sanitized = rawUrl.replace(/[?&]sslmode=[^&]+/g, '').replace(/[?&]ssl=[^&]+/g, '');
-    }
-    return {
-        connectionString: sanitized,
-        ssl: { rejectUnauthorized: false },
-    };
-};
-
-const pgPool = new Pool(getSeedPoolConfig());
+const pgPool = new Pool({
+    connectionString: process.env.POSTGRES_URL,
+    ssl: { rejectUnauthorized: false },
+});
 
 // ==========================================
 // Configurações do Usuário Demo
