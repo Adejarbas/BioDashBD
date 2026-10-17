@@ -51,15 +51,6 @@ function isAllowedOrigin(origin: string | null): boolean {
 export async function middleware(req: NextRequest) {
   const origin = req.headers.get("origin");
 
-  // Log temporário de CORS e FRONTEND_URL em rotas /api
-  if (req.nextUrl.pathname.startsWith("/api")) {
-    const allowed = getAllowedOrigins();
-    console.log(`[CORS DEBUG] Request: ${req.method} ${req.nextUrl.pathname}`);
-    console.log(`[CORS DEBUG] Request Origin: "${origin}" | Is Allowed: ${isAllowedOrigin(origin)}`);
-    console.log(`[CORS DEBUG] FRONTEND_URL env: "${process.env.FRONTEND_URL}"`);
-    console.log(`[CORS DEBUG] Allowed Origins:`, allowed);
-  }
-
   // CORS Preflight para /api
   if (req.method === "OPTIONS" && req.nextUrl.pathname.startsWith("/api")) {
     const resPre = new NextResponse(null, { status: 204 });
