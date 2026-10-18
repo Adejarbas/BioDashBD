@@ -11,3 +11,5 @@ node_modules
 .next
 tsconfig.tsbuildinfo
 *.tsbuildinfo
+public/uploads
+.storage

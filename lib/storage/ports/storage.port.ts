@@ -13,8 +13,17 @@ export interface DownloadUrlResult {
 
 export interface IFileStoragePort {
   readonly providerName: string;
-  generateUploadUrl(fileName: string, contentType: string, userId: string): Promise<UploadUrlResult>;
-  generateDownloadUrl(key: string, expiresInSeconds?: number): Promise<DownloadUrlResult>;
+  generateUploadUrl(
+    fileName: string,
+    contentType: string,
+    userId: string,
+    baseUrl?: string
+  ): Promise<UploadUrlResult>;
+  generateDownloadUrl(
+    key: string,
+    expiresInSeconds?: number,
+    baseUrl?: string
+  ): Promise<DownloadUrlResult>;
   deleteFile(key: string): Promise<boolean>;
 }
 

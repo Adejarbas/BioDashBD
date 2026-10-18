@@ -55,7 +55,8 @@ export class AzureBlobStorageAdapter implements IFileStoragePort {
   async generateUploadUrl(
     fileName: string,
     contentType: string,
-    userId: string
+    userId: string,
+    _baseUrl?: string
   ): Promise<UploadUrlResult> {
     const containerClient = this.getContainerClient();
 
@@ -86,7 +87,8 @@ export class AzureBlobStorageAdapter implements IFileStoragePort {
 
   async generateDownloadUrl(
     key: string,
-    expiresInSeconds = 3600
+    expiresInSeconds = 3600,
+    _baseUrl?: string
   ): Promise<DownloadUrlResult> {
     const containerClient = this.getContainerClient();
     const blockBlobClient = containerClient.getBlockBlobClient(key);

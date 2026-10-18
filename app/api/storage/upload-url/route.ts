@@ -24,10 +24,12 @@ export async function POST(request: NextRequest) {
     }
 
     const storage = getStorageService();
+    const origin = request.nextUrl.origin;
     const result = await storage.generateUploadUrl(
       fileName,
       contentType || "application/octet-stream",
-      user.id
+      user.id,
+      origin
     );
 
     return successResponse(result, "URL de upload gerada com sucesso.");

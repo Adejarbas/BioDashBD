@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
     }
 
     const storage = getStorageService();
-    const result = await storage.generateDownloadUrl(key);
+    const origin = request.nextUrl.origin;
+    const result = await storage.generateDownloadUrl(key, undefined, origin);
 
     return successResponse(result, "URL de download gerada com sucesso.");
   } catch (error: any) {
