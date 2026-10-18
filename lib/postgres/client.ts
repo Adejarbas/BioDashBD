@@ -1,5 +1,5 @@
 /**
- * Pool compartilhado do PostgreSQL (AWS RDS)
+ * Pool compartilhado do PostgreSQL (Azure Database for PostgreSQL Flexible Server)
  * Importar este módulo em todas as rotas que precisam de DB.
  */
 import { Pool } from 'pg';

@@ -1,4 +1,6 @@
-const AI_SERVICE_URL = (process.env.AI_SERVICE_URL || "http://127.0.0.1:5000").replace(/\/$/, "");
+function getAiServiceUrl(): string {
+  return (process.env.AI_SERVICE_URL || "http://127.0.0.1:5000").replace(/\/$/, "");
+}
 
 export class AiServiceError extends Error {
   constructor(message: string, public status: number = 502) {
@@ -11,11 +13,13 @@ export async function requestAi<T>(
   options: RequestInit = {},
   timeoutMs: number = 30_000
 ): Promise<T> {
+  const baseUrl = getAiServiceUrl();
+  const targetUrl = `${baseUrl}${path}`;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(`${AI_SERVICE_URL}${path}`, {
+    const response = await fetch(targetUrl, {
       ...options,
       cache: "no-store",
       signal: controller.signal,
@@ -37,6 +41,7 @@ export async function requestAi<T>(
     return body as T;
   } catch (error: any) {
     if (error instanceof AiServiceError) throw error;
+    console.error(`[AI-Service] Falha ao conectar em ${targetUrl}:`, error?.message || error);
     if (error?.name === "AbortError") {
       throw new AiServiceError("O serviço de IA excedeu o tempo de resposta.", 504);
     }
