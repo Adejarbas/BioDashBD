@@ -24,27 +24,6 @@ export class WinstonOtelLoggerAdapter implements ILoggerPort {
   constructor() {
     const transports: winston.transport[] = [new winston.transports.Console()];
 
-    if (process.env.LOGTAIL_TOKEN) {
-      try {
-        // Suporte opcional a transporte externo sem acoplamento obrigatório
-        const { Logtail } = require("@logtail/node");
-        const { LogtailTransport } = require("@logtail/winston");
-        const rawUrl = process.env.LOGTAIL_URL?.trim();
-        const endpoint = rawUrl
-          ? /^https?:\/\//i.test(rawUrl)
-            ? rawUrl
-            : `https://${rawUrl}`
-          : undefined;
-        const logtail = new Logtail(
-          process.env.LOGTAIL_TOKEN,
-          endpoint ? { endpoint } : undefined
-        );
-        transports.push(new LogtailTransport(logtail));
-      } catch {
-        // Ignora caso pacotes opcionais de Logtail não estejam ativos
-      }
-    }
-
     this.baseLogger = winston.createLogger({
       level: process.env.LOG_LEVEL || "info",
       format: winston.format.combine(
