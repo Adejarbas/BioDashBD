@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
-const logger = require("@/lib/logger-winston");
+import logger from "@/lib/logger-winston";
 
 const SALT_ROUNDS = 10;
 

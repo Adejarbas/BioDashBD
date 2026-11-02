@@ -8,16 +8,19 @@ import {
   successResponse,
   unauthorizedResponse,
 } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 export async function GET(request: NextRequest) {
   const user = getTokenFromRequest(request);
   if (!user) {
+    logger.warn("Tentativa não autorizada de gerar download URL");
     return unauthorizedResponse("Sessão inválida ou expirada.");
   }
 
   try {
     const key = request.nextUrl.searchParams.get("key");
     if (!key) {
+      logger.warn("Validação falhou ao gerar download URL: key ausente", { userId: user.id });
       return errorResponse("O parâmetro 'key' é obrigatório.", 400);
     }
 
@@ -25,9 +28,18 @@ export async function GET(request: NextRequest) {
     const origin = request.nextUrl.origin;
     const result = await storage.generateDownloadUrl(key, undefined, origin);
 
+    logger.info("Download URL emitida para cliente", {
+      userId: user.id,
+      key,
+      storageProvider: storage.providerName,
+    });
+
     return successResponse(result, "URL de download gerada com sucesso.");
   } catch (error: any) {
-    console.error("[Storage API] Erro ao gerar download URL:", error);
+    logger.error("Erro ao gerar download URL", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse(
       error?.message || "Erro interno ao gerar URL de download.",
       500

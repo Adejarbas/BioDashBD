@@ -9,7 +9,7 @@ import {
   isValidEmail,
   validateRequiredFields,
 } from "@/lib/api-response";
-const logger = require("@/lib/logger-winston");
+import logger from "@/lib/logger-winston";
 
 export async function POST(req: NextRequest) {
   try {

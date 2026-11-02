@@ -6,7 +6,7 @@ import {
   errorResponse,
   validationErrorResponse,
 } from '@/lib/api-response';
-const logger = require("@/lib/logger-winston");
+import logger from "@/lib/logger-winston";
 
 const env = (typeof globalThis !== "undefined" && (globalThis as any).process && (globalThis as any).process.env)
   ? (globalThis as any).process.env

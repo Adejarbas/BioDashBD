@@ -8,6 +8,7 @@ import {
   UploadUrlResult,
   DownloadUrlResult,
 } from "../ports/storage.port";
+import logger from "@/lib/logger-winston";
 
 export class AzureBlobStorageAdapter implements IFileStoragePort {
   readonly providerName = "azure-blob";
@@ -34,8 +35,9 @@ export class AzureBlobStorageAdapter implements IFileStoragePort {
         credential
       );
     } else {
-      console.warn(
-        "[AzureBlobStorage] Nenhuma credencial do Azure Storage configurada (AZURE_STORAGE_CONNECTION_STRING ou AZURE_STORAGE_ACCOUNT_NAME + AZURE_STORAGE_ACCOUNT_KEY). O serviço de upload funcionará em modo fallback."
+      logger.warn(
+        "Nenhuma credencial do Azure Storage configurada. O serviço de upload funcionará em modo fallback",
+        { storageProvider: "azure", container: this.containerName }
       );
     }
   }
@@ -77,6 +79,16 @@ export class AzureBlobStorageAdapter implements IFileStoragePort {
       contentType: contentType || "application/octet-stream",
     });
 
+    logger.info("SAS token gerado com sucesso para avatar", {
+      operation: "upload",
+      userId,
+      key,
+      contentType: contentType || "application/octet-stream",
+      expiresInSeconds,
+      storageProvider: "azure",
+      container: this.containerName,
+    });
+
     return {
       uploadUrl,
       key,
@@ -100,6 +112,14 @@ export class AzureBlobStorageAdapter implements IFileStoragePort {
       expiresOn,
     });
 
+    logger.info("SAS token gerado com sucesso para download de avatar", {
+      operation: "download",
+      key,
+      expiresInSeconds,
+      storageProvider: "azure",
+      container: this.containerName,
+    });
+
     return {
       downloadUrl,
       key,
@@ -112,9 +132,20 @@ export class AzureBlobStorageAdapter implements IFileStoragePort {
       const containerClient = this.getContainerClient();
       const blockBlobClient = containerClient.getBlockBlobClient(key);
       const res = await blockBlobClient.deleteIfExists();
+      logger.info("Arquivo removido no Azure Blob Storage", {
+        operation: "delete",
+        key,
+        succeeded: res.succeeded,
+        storageProvider: "azure",
+      });
       return res.succeeded;
-    } catch (error) {
-      console.error("[AzureBlobStorage] Erro ao deletar arquivo:", error);
+    } catch (error: any) {
+      logger.error("Erro ao deletar arquivo no Azure Blob Storage", {
+        operation: "delete",
+        key,
+        storageProvider: "azure",
+        error: error?.message || String(error),
+      });
       return false;
     }
   }

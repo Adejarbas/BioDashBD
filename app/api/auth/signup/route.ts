@@ -10,6 +10,7 @@ import {
   validateRequiredFields,
   validatePassword,
 } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 const SALT_ROUNDS = 10;
 
@@ -18,9 +19,12 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { email, password, full_name, company_name } = body;
 
+    logger.info("Signup attempt", { email });
+
     // Validação de campos obrigatórios
     const requiredValidation = validateRequiredFields(body, ["email", "password", "full_name"]);
     if (!requiredValidation.valid) {
+      logger.warn("Signup validation failed", { email, errors: requiredValidation.errors });
       return validationErrorResponse(requiredValidation.errors);
     }
 
@@ -47,6 +51,7 @@ export async function POST(req: NextRequest) {
       [normalizedEmail]
     );
     if (existing.rows.length > 0) {
+      logger.warn("Signup failed - email already registered", { email: normalizedEmail });
       return errorResponse("An account with this email already exists", 409);
     }
 
@@ -69,6 +74,8 @@ export async function POST(req: NextRequest) {
 
     const token = signToken({ id: user.id, email: user.email });
 
+    logger.info("Signup successful", { userId: user.id, email: user.email });
+
     const response = successResponse(
       {
         token,
@@ -90,7 +97,7 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error: any) {
-    console.error("SIGNUP ERROR:", error);
+    logger.error("Signup error", { error: error?.message || String(error) });
     if (error instanceof SyntaxError) return errorResponse("Invalid request body", 400);
     return errorResponse("An unexpected error occurred while creating account", 500);
   }
