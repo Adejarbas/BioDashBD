@@ -29,9 +29,16 @@ export class WinstonOtelLoggerAdapter implements ILoggerPort {
         // Suporte opcional a transporte externo sem acoplamento obrigatório
         const { Logtail } = require("@logtail/node");
         const { LogtailTransport } = require("@logtail/winston");
-        const logtail = new Logtail(process.env.LOGTAIL_TOKEN, {
-          endpoint: process.env.LOGTAIL_URL,
-        });
+        const rawUrl = process.env.LOGTAIL_URL?.trim();
+        const endpoint = rawUrl
+          ? /^https?:\/\//i.test(rawUrl)
+            ? rawUrl
+            : `https://${rawUrl}`
+          : undefined;
+        const logtail = new Logtail(
+          process.env.LOGTAIL_TOKEN,
+          endpoint ? { endpoint } : undefined
+        );
         transports.push(new LogtailTransport(logtail));
       } catch {
         // Ignora caso pacotes opcionais de Logtail não estejam ativos
