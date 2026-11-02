@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 export async function GET(request: NextRequest) {
   const user = getTokenFromRequest(request);
@@ -19,8 +20,11 @@ export async function GET(request: NextRequest) {
     );
 
     return successResponse(rows[0] || null);
-  } catch (error) {
-    console.error("Maintenance incidents GET error:", error);
+  } catch (error: any) {
+    logger.error("Maintenance incidents GET error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao buscar incidentes.", 500);
   }
 }
@@ -43,12 +47,21 @@ export async function POST(request: NextRequest) {
       [user.id, description]
     );
 
+    logger.info("Maintenance incident created", {
+      userId: user.id,
+      incidentId: rows[0]?.id,
+      status: rows[0]?.status,
+    });
+
     return successResponse(rows[0], "Incidente criado com sucesso.", 201);
   } catch (error: any) {
     if (error instanceof SyntaxError) {
       return errorResponse("Corpo da requisição inválido.", 400);
     }
-    console.error("Maintenance incidents POST error:", error);
+    logger.error("Maintenance incidents POST error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao criar incidente.", 500);
   }
 }

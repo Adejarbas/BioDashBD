@@ -1,9 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-const logger = require("@/lib/logger-winston");
+import logger from "@/lib/logger-winston";
+
+let isReplicaWarm = false;
 
 export async function GET(req: NextRequest) {
   try {
-    logger.info("Health check called");
+    const verbose = req.nextUrl.searchParams.get('verbose') === 'true';
+    if (!isReplicaWarm) {
+      isReplicaWarm = true;
+      logger.info("Starting BioDash API - Health check readiness confirmed (Cold Start)", {
+        coldStart: true,
+        status: 'ok',
+      });
+    } else if (verbose || process.env.LOG_HEALTH_CHECKS === 'true') {
+      logger.info("Health check called", { status: 'ok', verbose });
+    } else {
+      logger.debug("Health check called", { status: 'ok' });
+    }
+
     return NextResponse.json({
       status: 'ok',
       timestamp: new Date().toISOString(),

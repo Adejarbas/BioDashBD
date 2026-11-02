@@ -1,12 +1,14 @@
 import { IFileStoragePort, IFileStorage } from "./ports/storage.port";
 import { AzureBlobStorageAdapter } from "./adapters/azure-blob.adapter";
 import { LocalStorageAdapter } from "./adapters/local-storage.adapter";
+import logger from "@/lib/logger-winston";
 
 let instance: IFileStoragePort | null = null;
 
 export function getStorageService(): IFileStorage {
   if (!instance) {
     const provider = (process.env.STORAGE_PROVIDER || "").toLowerCase().trim();
+    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME || "biogen-avatars";
 
     if (provider === "azure") {
       const hasAzureCredentials = Boolean(
@@ -15,20 +17,22 @@ export function getStorageService(): IFileStorage {
       );
 
       if (hasAzureCredentials) {
-        console.log(
-          "ℹ️ [StorageFactory] Provedor 'azure' configurado. Utilizando AzureBlobStorageAdapter."
-        );
+        logger.info("StorageFactory inicializado com AzureBlobStorageAdapter", {
+          storageProvider: "azure",
+          containerName,
+        });
         instance = new AzureBlobStorageAdapter();
       } else {
-        console.error(
-          "🔴 [StorageFactory] Provedor configurado como 'azure', porém as credenciais necessárias (AZURE_STORAGE_CONNECTION_STRING ou AZURE_STORAGE_ACCOUNT_NAME + AZURE_STORAGE_ACCOUNT_KEY) não estão definidas. Utilizando LocalStorageAdapter como fallback."
+        logger.warn(
+          "Provedor configurado como 'azure', mas sem credenciais definidas. Utilizando LocalStorageAdapter como fallback",
+          { storageProvider: "local", requestedProvider: "azure" }
         );
         instance = new LocalStorageAdapter();
       }
     } else if (provider === "local") {
-      console.log(
-        "ℹ️ [StorageFactory] Provedor 'local' configurado. Utilizando LocalStorageAdapter."
-      );
+      logger.info("StorageFactory inicializado com LocalStorageAdapter", {
+        storageProvider: "local",
+      });
       instance = new LocalStorageAdapter();
     } else {
       // Se STORAGE_PROVIDER não foi informado explicitamente:
@@ -38,14 +42,15 @@ export function getStorageService(): IFileStorage {
       );
 
       if (hasAzureCredentials) {
-        console.log(
-          "ℹ️ [StorageFactory] Credenciais do Azure detectadas. Utilizando AzureBlobStorageAdapter."
-        );
+        logger.info("Credenciais Azure Storage detectadas. Utilizando AzureBlobStorageAdapter", {
+          storageProvider: "azure",
+          containerName,
+        });
         instance = new AzureBlobStorageAdapter();
       } else {
-        console.log(
-          "ℹ️ [StorageFactory] Nenhuma credencial do Azure detectada. Utilizando LocalStorageAdapter."
-        );
+        logger.info("Nenhuma credencial Azure detectada. Utilizando LocalStorageAdapter", {
+          storageProvider: "local",
+        });
         instance = new LocalStorageAdapter();
       }
     }

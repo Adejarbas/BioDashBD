@@ -12,6 +12,7 @@ import {
   getSafeFilePath,
   verifyLocalToken,
 } from "@/lib/storage/adapters/local-storage.adapter";
+import logger from "@/lib/logger-winston";
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB
 
@@ -50,13 +51,22 @@ async function handleUpload(request: NextRequest) {
     await fs.promises.mkdir(path.dirname(filePath), { recursive: true });
     await fs.promises.writeFile(filePath, buffer);
 
+    logger.info("Local storage file uploaded", {
+      key,
+      sizeBytes: buffer.byteLength,
+      storageProvider: "local",
+    });
+
     return successResponse(
       { key, size: buffer.byteLength },
       "Upload concluído com sucesso no armazenamento local.",
       200
     );
   } catch (error: any) {
-    console.error("[LocalUpload API] Erro ao gravar arquivo:", error);
+    logger.error("Erro ao gravar arquivo no storage local", {
+      error: error?.message || String(error),
+      storageProvider: "local",
+    });
     return errorResponse(
       error?.message || "Erro interno ao processar upload local.",
       500

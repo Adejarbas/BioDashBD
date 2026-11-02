@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
-const logger = require("@/lib/logger-winston");
+import logger from "@/lib/logger-winston";
 
 const SALT_ROUNDS = 10;
 
@@ -38,7 +38,6 @@ export async function PUT(req: NextRequest) {
       return errorResponse("Corpo da requisição inválido.", 400);
     }
     logger.error("PUT /api/auth/password error", { error: error.message });
-    console.error("PUT /api/auth/password error:", error);
     return errorResponse("Erro ao alterar senha.", 500);
   }
 }

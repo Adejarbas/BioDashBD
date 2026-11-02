@@ -6,6 +6,7 @@ import {
   UploadUrlResult,
   DownloadUrlResult,
 } from "../ports/storage.port";
+import logger from "@/lib/logger-winston";
 
 export function getSafeFilePath(baseDir: string, key: string): string {
   const cleanKey = key.replace(/\\/g, "/");
@@ -92,6 +93,15 @@ export class LocalStorageAdapter implements IFileStoragePort {
       key
     )}`;
 
+    logger.info("URL assinada de upload gerada com sucesso", {
+      operation: "upload",
+      userId,
+      key,
+      contentType: contentType || "application/octet-stream",
+      expiresInSeconds,
+      storageProvider: this.providerName,
+    });
+
     return {
       uploadUrl,
       key,
@@ -111,6 +121,13 @@ export class LocalStorageAdapter implements IFileStoragePort {
       cleanKey
     )}`;
 
+    logger.info("URL de download gerada com sucesso", {
+      operation: "download",
+      key: cleanKey,
+      expiresInSeconds,
+      storageProvider: this.providerName,
+    });
+
     return {
       downloadUrl,
       key: cleanKey,
@@ -124,9 +141,19 @@ export class LocalStorageAdapter implements IFileStoragePort {
       if (fs.existsSync(filePath)) {
         await fs.promises.unlink(filePath);
       }
+      logger.info("Arquivo removido no armazenamento local", {
+        operation: "delete",
+        key,
+        storageProvider: this.providerName,
+      });
       return true;
-    } catch (error) {
-      console.error("[LocalStorageAdapter] Erro ao deletar arquivo:", error);
+    } catch (error: any) {
+      logger.error("Erro ao deletar arquivo no armazenamento local", {
+        operation: "delete",
+        key,
+        storageProvider: this.providerName,
+        error: error?.message || String(error),
+      });
       return false;
     }
   }

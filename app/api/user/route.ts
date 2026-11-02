@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import pool from "@/lib/postgres/client";
 import { getTokenFromCookieHeader } from "@/lib/auth/jwt";
 import { successResponse, errorResponse, unauthorizedResponse } from "@/lib/api-response";
-const logger = require("@/lib/logger-winston");
+import logger from "@/lib/logger-winston";
 
 // GET: retorna usuário autenticado via JWT
 export async function GET(req: NextRequest) {
@@ -33,7 +33,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (e: any) {
     logger.error("GET /api/user error", { error: e.message });
-    console.error("GET /api/user error:", e);
     return errorResponse("Failed to fetch user", 500);
   }
 }

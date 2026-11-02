@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 export async function PUT(request: NextRequest) {
   const user = getTokenFromRequest(request);
@@ -20,6 +21,11 @@ export async function PUT(request: NextRequest) {
       [resolutionMessage, user.id]
     );
 
+    logger.info("Active maintenance incidents resolved", {
+      userId: user.id,
+      updatedCount: rowCount || 0,
+    });
+
     return successResponse(
       { updated: rowCount },
       "Incidente resolvido com sucesso."
@@ -28,7 +34,10 @@ export async function PUT(request: NextRequest) {
     if (error instanceof SyntaxError) {
       return errorResponse("Corpo da requisição inválido.", 400);
     }
-    console.error("Maintenance incident resolve PUT error:", error);
+    logger.error("Maintenance incident resolve PUT error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao resolver incidente.", 500);
   }
 }
