@@ -67,7 +67,6 @@ export async function POST(req: NextRequest) {
     return successResponse({ url: session.url }, 'Checkout session created successfully');
   } catch (error: any) {
     logger.error("Stripe checkout session error", { error: error.message, stack: error.stack });
-    console.error('Stripe checkout session error:', error);
     if (error instanceof SyntaxError) {
       return errorResponse('Invalid request body', 400);
     }

@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 export async function DELETE(
   request: NextRequest,
@@ -18,9 +19,16 @@ export async function DELETE(
       [id, user.id]
     );
     if (!result.rowCount) return errorResponse("Biodigestor não encontrado.", 404);
+    logger.info("Biodigester marker deleted", {
+      userId: user.id,
+      markerId: id,
+    });
     return successResponse(undefined, "Biodigestor removido com sucesso.");
-  } catch (error) {
-    console.error("Markers DELETE error:", error);
+  } catch (error: any) {
+    logger.error("Markers DELETE error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao remover biodigestor.", 500);
   }
 }

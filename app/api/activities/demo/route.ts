@@ -1,8 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server"
-import {
-  successResponse,
-  errorResponse,
-} from "@/lib/api-response"
+import { type NextRequest } from "next/server";
+import { successResponse, errorResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 // Demo endpoint to manually trigger activities for testing
 export async function POST(request: NextRequest) {
@@ -18,37 +16,35 @@ export async function POST(request: NextRequest) {
       { type: "error", description: "Falha temporária na comunicação com sensor de pressão" },
       { type: "info", description: "Backup automático dos dados realizado" },
       { type: "success", description: "Eficiência do sistema otimizada - economia de 12%" },
-    ]
+    ];
 
-    const randomActivity = demoActivities[Math.floor(Math.random() * demoActivities.length)]
+    const randomActivity = demoActivities[Math.floor(Math.random() * demoActivities.length)];
 
-    // Send to main activities endpoint
     const response = await fetch(`${request.nextUrl.origin}/api/activities`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(randomActivity),
-    })
+    });
 
     if (response.ok) {
-      const result = await response.json()
+      const result = await response.json();
       if (result.success && result.data) {
-        return successResponse(result.data, "Demo activity created successfully")
+        logger.info("Demo activity triggered", { type: randomActivity.type });
+        return successResponse(result.data, "Demo activity created successfully");
       } else {
-        return errorResponse("Failed to create demo activity", 500)
+        return errorResponse("Failed to create demo activity", 500);
       }
     } else {
-      const errorData = await response.json().catch(() => ({}))
+      const errorData = await response.json().catch(() => ({}));
       return errorResponse(
         errorData.error || "Failed to create demo activity",
         response.status
-      )
+      );
     }
   } catch (error: any) {
-    console.error("Error creating demo activity:", error)
-    return errorResponse("Failed to create demo activity", 500)
+    logger.error("Error creating demo activity", { error: error?.message || String(error) });
+    return errorResponse("Failed to create demo activity", 500);
   }
 }
-
-

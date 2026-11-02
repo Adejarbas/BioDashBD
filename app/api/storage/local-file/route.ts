@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { errorResponse } from "@/lib/api-response";
 import { getSafeFilePath } from "@/lib/storage/adapters/local-storage.adapter";
+import logger from "@/lib/logger-winston";
 
 const MIME_TYPES: Record<string, string> = {
   jpg: "image/jpeg",
@@ -47,6 +48,13 @@ export async function GET(request: NextRequest) {
 
     const fileBuffer = await fs.promises.readFile(filePath);
 
+    logger.info("Local storage file served", {
+      key,
+      contentType,
+      sizeBytes: stat.size,
+      storageProvider: "local",
+    });
+
     return new NextResponse(fileBuffer, {
       status: 200,
       headers: {
@@ -56,7 +64,10 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error: any) {
-    console.error("[LocalFile API] Erro ao servir arquivo:", error);
+    logger.error("Erro ao servir arquivo no storage local", {
+      error: error?.message || String(error),
+      storageProvider: "local",
+    });
     return errorResponse(
       error?.message || "Erro interno ao servir arquivo local.",
       500

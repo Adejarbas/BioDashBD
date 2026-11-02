@@ -38,7 +38,6 @@ export async function PUT(req: NextRequest) {
       return errorResponse("Corpo da requisição inválido.", 400);
     }
     logger.error("PUT /api/auth/password error", { error: error.message });
-    console.error("PUT /api/auth/password error:", error);
     return errorResponse("Erro ao alterar senha.", 500);
   }
 }

@@ -33,7 +33,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (e: any) {
     logger.error("GET /api/user error", { error: e.message });
-    console.error("GET /api/user error:", e);
     return errorResponse("Failed to fetch user", 500);
   }
 }

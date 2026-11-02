@@ -4,6 +4,7 @@ import {
   successResponse,
   errorResponse,
 } from '@/lib/api-response';
+import logger from '@/lib/logger-winston';
 
 const env = (typeof globalThis !== "undefined" && (globalThis as any).process && (globalThis as any).process.env)
   ? (globalThis as any).process.env
@@ -12,6 +13,7 @@ const env = (typeof globalThis !== "undefined" && (globalThis as any).process &&
 export async function POST(req: NextRequest) {
   try {
     if (!env.STRIPE_SECRET_KEY && !env.SECRET_STRIPE_KEY) {
+      logger.error('Stripe not configured - missing secret key');
       return errorResponse('Stripe not configured', 501);
     }
     
@@ -34,12 +36,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (!session.url) {
+      logger.error('Stripe session created but no URL returned');
       return errorResponse('Failed to create checkout session', 500);
     }
 
+    logger.info('Stripe session created', { sessionId: session.id });
     return successResponse({ url: session.url }, 'Checkout session created successfully');
   } catch (error: any) {
-    console.error('Stripe error:', error);
+    logger.error('Stripe error', { error: error?.message || String(error) });
     return errorResponse(error.message || 'Failed to process payment', 500);
   }
 }
