@@ -1,10 +1,11 @@
 /** @type {import('next').NextConfig} */
 // CORS é aplicado dinamicamente pelo middleware conforme a origem da chamada.
+// No Next.js 16+, instrumentation.ts é carregado nativamente por padrão.
 const nextConfig = {
-  // Garante que o instrumentation.ts seja chamado no ciclo de vida do Next.js
-  experimental: {
-    instrumentationHook: true,
-  },
+  serverExternalPackages: [
+    '@azure/monitor-opentelemetry',
+    '@opentelemetry/instrumentation',
+  ],
 };
 
 module.exports = nextConfig;
