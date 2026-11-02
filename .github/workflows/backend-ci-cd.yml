@@ -31,7 +31,7 @@ jobs:
           cache: 'npm'
 
       - name: Instalar Dependências
-        run: npm install --force
+        run: npm install
 
       - name: Verificação de Tipos TypeScript (Quality Gate)
         run: npm run typecheck
