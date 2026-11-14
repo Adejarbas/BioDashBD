@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev -p 3003",
     "build": "next build",
+    "prepare": "git config core.hooksPath .githooks || true",
     "typecheck": "tsc --noEmit",
     "start": "next start -p 3003",
     "test": "echo \"Error: no test specified\" && exit 1",
