@@ -1,8 +1,4 @@
 const { Pool } = require('pg');
-const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL,
-  ssl: { rejectUnauthorized: false }
-});
 
 const migrationSql = `
 -- Adiciona colunas para identificação do biodigestor, sensor, métricas e ciclo de vida
@@ -38,15 +34,28 @@ CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_status
 `;
 
 async function main() {
+  if (!process.env.POSTGRES_URL) {
+    console.error('❌ POSTGRES_URL não informada.');
+    process.exit(1);
+  }
+
+  const pool = new Pool({
+    connectionString: process.env.POSTGRES_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+
   try {
-    console.log('Executando migration 002...');
+    console.log('Executando migration 002 (sensor_alerts)...');
     await pool.query(migrationSql);
     console.log('✅ Migration 002 executada com sucesso!');
 
-    const r = await pool.query("SELECT column_name, data_type, udt_name FROM information_schema.columns WHERE table_name = 'sensor_alerts'");
+    const r = await pool.query(
+      "SELECT column_name, data_type, udt_name FROM information_schema.columns WHERE table_name = 'sensor_alerts'"
+    );
     console.log('sensor_alerts colunas atualizadas:', r.rows.map(c => `${c.column_name} (${c.udt_name})`));
   } catch (err) {
     console.error('❌ Erro na migration:', err);
+    process.exit(1);
   } finally {
     await pool.end();
   }
