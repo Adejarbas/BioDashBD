@@ -268,6 +268,39 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Checkout repository para scripts de migração
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js para Migração
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Executar Migrações do PostgreSQL (Azure)
+        env:
+          FALLBACK_POSTGRES_URL: ${{ secrets.POSTGRES_URL }}
+        run: |
+          set -euo pipefail
+          echo "Buscando connection string do banco de dados na Azure..."
+          DB_URL=$(az containerapp secret show \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RG_NAME" \
+            --secret-name "database-connection-string" \
+            --query "value" -o tsv 2>/dev/null || echo "")
+
+          if [ -z "$DB_URL" ]; then
+            DB_URL="$FALLBACK_POSTGRES_URL"
+          fi
+
+          if [ -z "$DB_URL" ]; then
+            echo "❌ Nenhuma connection string de banco encontrada (secret database-connection-string ou POSTGRES_URL)."
+            exit 1
+          fi
+
+          echo "Instalando dependência pg e executando migração..."
+          npm install pg
+          POSTGRES_URL="$DB_URL" node scripts/run_migration.js
+
       - name: Deploy to Azure Container Apps (Atualização da API)
         run: |
           IMAGE_NAME="docker.io/${{ secrets.DOCKERHUB_USERNAME }}/biodashbd:${IMAGE_TAG}"

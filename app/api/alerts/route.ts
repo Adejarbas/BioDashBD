@@ -30,8 +30,9 @@ export async function GET(request: NextRequest) {
     const params: any[] = [user.id];
 
     if (biodigesterId && biodigesterId !== "all" && biodigesterId !== "todos") {
-      if (!isNaN(Number(biodigesterId))) {
-        params.push(Number(biodigesterId));
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(biodigesterId.trim());
+      if (isUuid) {
+        params.push(biodigesterId.trim());
         conditions.push(`(sa.biodigester_id = $${params.length} OR LOWER(COALESCE(sa.biodigester_name, '')) LIKE LOWER('%' || $${params.length} || '%'))`);
       } else {
         params.push(`%${biodigesterId.toLowerCase()}%`);
@@ -148,7 +149,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const biodigesterId = body?.biodigesterId || body?.biodigester_id || null;
+    const rawBiodigesterId = body?.biodigesterId ?? body?.biodigester_id ?? null;
+    const isUuid = typeof rawBiodigesterId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawBiodigesterId.trim());
+    const biodigesterId = isUuid ? rawBiodigesterId.trim() : null;
     let biodigesterName = body?.biodigesterName || body?.biodigester_name || null;
     const sensorId = body?.sensorId || body?.sensor_id || null;
     const sensorType = body?.sensorType || body?.sensor_type || "temperatura";
@@ -158,7 +161,9 @@ export async function POST(request: NextRequest) {
     let alertLevel = body?.alertLevel || body?.alert_level || null;
     let message = typeof body?.message === "string" ? body.message.trim() : "";
     const status = body?.status || "active";
-    const maintenanceId = body?.maintenanceId || body?.maintenance_id || null;
+    const rawMaintenanceId = body?.maintenanceId ?? body?.maintenance_id ?? null;
+    const isMaintUuid = typeof rawMaintenanceId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rawMaintenanceId.trim());
+    const maintenanceId = isMaintUuid ? rawMaintenanceId.trim() : null;
 
     // Se temos sensor_type e reading_value, podemos aplicar classificação automática
     if (readingValue !== null && !isNaN(Number(readingValue))) {
@@ -220,7 +225,7 @@ export async function POST(request: NextRequest) {
       RETURNING *`,
       [
         user.id,
-        biodigesterId ? Number(biodigesterId) : null,
+        biodigesterId,
         biodigesterName,
         sensorId,
         sensorType,
