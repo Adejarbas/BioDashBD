@@ -5,6 +5,7 @@ import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
 import { classifySensorReading } from "@/lib/anomaly-classifier";
+import logger from "@/lib/logger-winston";
 
 export async function GET(request: NextRequest) {
   const user = getTokenFromRequest(request);
@@ -118,6 +119,10 @@ export async function GET(request: NextRequest) {
 
     const { rows } = await pool.query(dataQuery, [...params, limit, offset]);
 
+    logger.info("Sensor alerts retrieved", {
+      userId: user.id,
+      count: rows.length,
+    });
     return successResponse({
       alerts: rows,
       pagination: {
@@ -127,8 +132,11 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error) {
-    console.error("Alerts GET error:", error);
+  } catch (error: any) {
+    logger.error("Alerts GET error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao buscar histórico de alertas.", 500);
   }
 }
@@ -226,12 +234,21 @@ export async function POST(request: NextRequest) {
       ]
     );
 
+    logger.info("Sensor alert created", {
+      userId: user.id,
+      alertId: rows[0]?.id,
+      alertLevel,
+    });
+
     return successResponse(rows[0], "Alerta registrado com sucesso.", 201);
   } catch (error: any) {
     if (error instanceof SyntaxError) {
       return errorResponse("Corpo da requisição inválido.", 400);
     }
-    console.error("Alerts POST error:", error);
+    logger.error("Alerts POST error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao criar alerta.", 500);
   }
 }

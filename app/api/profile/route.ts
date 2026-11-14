@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 export async function GET(request: NextRequest) {
   const user = getTokenFromRequest(request);
@@ -15,9 +16,18 @@ export async function GET(request: NextRequest) {
       [user.id]
     );
 
+    logger.info("Profile retrieved", {
+      userId: user.id,
+      found: Boolean(rows[0]),
+      hasAvatar: Boolean(rows[0]?.avatar_url),
+    });
+
     return successResponse(rows[0] || null);
-  } catch (error) {
-    console.error("Profile GET error:", error);
+  } catch (error: any) {
+    logger.error("Profile GET error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao buscar perfil.", 500);
   }
 }
@@ -89,12 +99,21 @@ export async function PUT(request: NextRequest) {
       ]
     );
 
+    logger.info("Profile updated", {
+      userId: user.id,
+      company: companyName,
+      hasAvatar: Boolean(resolvedAvatar),
+    });
+
     return successResponse(rows[0], "Perfil atualizado com sucesso.");
   } catch (error: any) {
     if (error instanceof SyntaxError) {
       return errorResponse("Corpo da requisição inválido.", 400);
     }
-    console.error("Profile PUT error:", error);
+    logger.error("Profile PUT error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao atualizar perfil.", 500);
   }
 }

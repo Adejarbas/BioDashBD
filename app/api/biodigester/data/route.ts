@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import pool from "@/lib/postgres/client";
 import { getTokenFromCookieHeader } from "@/lib/auth/jwt";
 import { successResponse, unauthorizedResponse, errorResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,9 +58,14 @@ export async function GET(request: NextRequest) {
       },
     };
 
+    logger.info("Biodigester time-series data retrieved", {
+      userId: payload.id,
+      recordsCount: rows.length,
+    });
+
     return successResponse(processedData, "Biodigester data retrieved successfully");
   } catch (error: any) {
-    console.error("Biodigester data error:", error);
+    logger.error("Biodigester data error", { error: error?.message || String(error) });
     return errorResponse("Internal server error", 500);
   }
 }
