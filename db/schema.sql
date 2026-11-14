@@ -77,13 +77,34 @@ CREATE TABLE IF NOT EXISTS maintenance_incidents (
 );
 
 -- ============================================================
--- SENSOR_ALERTS
+-- BIODIGESTOR_MAPS (Unidades e Localizações)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS biodigestor_maps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  address JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- SENSOR_ALERTS (Histórico de Alertas e Ocorrências)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS sensor_alerts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  biodigester_id UUID REFERENCES biodigestor_maps(id) ON DELETE SET NULL,
+  biodigester_name VARCHAR(255),
+  sensor_id VARCHAR(100),
+  sensor_type VARCHAR(50),
+  reading_value NUMERIC,
+  threshold_value NUMERIC,
+  unit VARCHAR(20),
   alert_level VARCHAR(50) DEFAULT 'info',
   message TEXT,
+  status VARCHAR(50) DEFAULT 'active',
+  resolved_at TIMESTAMPTZ,
+  resolution_notes TEXT,
+  maintenance_id UUID REFERENCES maintenance_schedules(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -98,9 +119,9 @@ CREATE TABLE IF NOT EXISTS activities (
   timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 
-ALTER TABLE maintenance_incidents ADD COLUMN user_email VARCHAR(255);
-ALTER TABLE maintenance_incidents ADD COLUMN resolution_message TEXT;
-ALTER TABLE maintenance_incidents ADD COLUMN status VARCHAR(50) DEFAULT 'pending';
+ALTER TABLE maintenance_incidents ADD COLUMN IF NOT EXISTS user_email VARCHAR(255);
+ALTER TABLE maintenance_incidents ADD COLUMN IF NOT EXISTS resolution_message TEXT;
+ALTER TABLE maintenance_incidents ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';
 
 
 -- ============================================================
@@ -111,5 +132,9 @@ CREATE INDEX IF NOT EXISTS idx_indicators_measured_at ON biodigester_indicators(
 CREATE INDEX IF NOT EXISTS idx_maintenance_schedules_user_id ON maintenance_schedules(user_id);
 CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_id ON sensor_alerts(user_id);
 CREATE INDEX IF NOT EXISTS idx_sensor_alerts_created_at ON sensor_alerts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_biodigester ON sensor_alerts(user_id, biodigester_id);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_sensor ON sensor_alerts(user_id, sensor_type);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_level ON sensor_alerts(user_id, alert_level);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_status ON sensor_alerts(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_activities_user_id ON activities(user_id);
 CREATE INDEX IF NOT EXISTS idx_activities_timestamp ON activities(timestamp DESC);
