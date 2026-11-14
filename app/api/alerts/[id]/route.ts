@@ -69,7 +69,8 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     }
 
     if (maintenanceId !== undefined) {
-      values.push(maintenanceId);
+      const isMaintUuid = typeof maintenanceId === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(maintenanceId.trim());
+      values.push(isMaintUuid ? maintenanceId.trim() : null);
       updates.push(`maintenance_id = $${values.length}`);
     }
 
