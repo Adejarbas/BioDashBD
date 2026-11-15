@@ -33,25 +33,44 @@ export async function requestAi<T>(
     try {
       body = text ? JSON.parse(text) : {};
     } catch {
+      body = null;
+    }
+
+    if (!response.ok) {
+      const errorStatus = response.status >= 500 ? 503 : response.status;
+      logger.warn("AI Service respondeu com erro HTTP", {
+        path,
+        status: response.status,
+        durationMs,
+        detail: body?.detail || body?.error || text?.slice(0, 200),
+      });
+      if (
+        response.status === 502 ||
+        response.status === 503 ||
+        response.status === 504 ||
+        body?.detail === "Failed to forward request"
+      ) {
+        throw new AiServiceError(
+          "O serviço de IA está temporariamente indisponível ou sobrecarregado. Envie um áudio curto de até 12 segundos e tente novamente.",
+          503
+        );
+      }
+      if (body) {
+        throw new AiServiceError(
+          body.detail || body.error || "O serviço de IA não conseguiu processar a solicitação.",
+          errorStatus
+        );
+      }
+      throw new AiServiceError("O serviço de IA retornou uma resposta inválida.", errorStatus);
+    }
+
+    if (body === null) {
       logger.error("AI Service retornou payload não-JSON inválido", {
         path,
         status: response.status,
         durationMs,
       });
       throw new AiServiceError("O serviço de IA retornou uma resposta inválida.");
-    }
-
-    if (!response.ok) {
-      logger.warn("AI Service respondeu com erro HTTP", {
-        path,
-        status: response.status,
-        durationMs,
-        detail: body.detail || body.error,
-      });
-      throw new AiServiceError(
-        body.detail || body.error || "O serviço de IA não conseguiu processar a solicitação.",
-        response.status >= 500 ? 503 : response.status
-      );
     }
 
     logger.info("AI Service request completed", {
