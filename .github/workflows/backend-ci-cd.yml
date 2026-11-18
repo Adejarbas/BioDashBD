@@ -35,7 +35,7 @@ jobs:
           cache: 'npm'
 
       - name: Instalar Dependências
-        run: npm ci --legacy-peer-deps
+        run: npm ci
 
       - name: Verificar lint
         run: npm run lint
