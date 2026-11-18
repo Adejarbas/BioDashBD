@@ -22,7 +22,7 @@ jobs:
   # Job 1: Quality Gate & Validação Estática (Roda em PRs e Pushes)
   # ============================================================================
   validate:
-    name: Lint & Typecheck (Quality Gate)
+    name: Lint, Typecheck & Testes (Quality Gate)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -35,10 +35,16 @@ jobs:
           cache: 'npm'
 
       - name: Instalar Dependências
-        run: npm install
+        run: npm ci
+
+      - name: Verificar lint
+        run: npm run lint
 
       - name: Verificação de Tipos TypeScript (Quality Gate)
         run: npm run typecheck
+
+      - name: Executar testes unitários
+        run: npm test
 
   # ============================================================================
   # Job 2: Validação de Conventional Commits (Quality Gate)

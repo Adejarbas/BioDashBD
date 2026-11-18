@@ -12,7 +12,8 @@
     "prepare": "git config core.hooksPath .githooks || true",
     "typecheck": "tsc --noEmit",
     "start": "next start -p 3003",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test test/*.test.cjs",
+    "lint": "eslint .",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "docker:build": "docker compose up -d --build",
@@ -49,6 +50,8 @@
     "@types/node": "^24.9.1",
     "@types/pg": "^8.11.6",
     "@types/react": "^19.2.2",
+    "@typescript-eslint/parser": "^8.65.0",
+    "eslint": "^9.39.5",
     "typescript": "5.9.3"
   }
 }
