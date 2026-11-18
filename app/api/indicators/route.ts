@@ -5,14 +5,23 @@ import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { getUserIndicators } from "@/lib/chatbot-data";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 export async function GET(request: NextRequest) {
   const user = getTokenFromRequest(request);
   if (!user) return unauthorizedResponse("Sessão inválida ou expirada.");
   try {
-    return successResponse(await getUserIndicators(user.id));
-  } catch (error) {
-    console.error("Indicators GET error:", error);
+    const indicators = await getUserIndicators(user.id);
+    logger.info("Biodigester indicators retrieved", {
+      userId: user.id,
+      count: indicators.length,
+    });
+    return successResponse(indicators);
+  } catch (error: any) {
+    logger.error("Indicators GET error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao buscar indicadores.", 500);
   }
 }
@@ -59,6 +68,16 @@ export async function POST(request: NextRequest) {
         );
 
     const row = result.rows[0];
+    logger.info(existing.rowCount ? "Biodigester indicator updated" : "Biodigester indicator created", {
+      userId: user.id,
+      indicatorId: row?.id,
+      month,
+      year,
+      wasteProcessed: Number(row.waste_processed),
+      energyGenerated: Number(row.energy_generated),
+      taxSavings: Number(row.tax_savings),
+    });
+
     return successResponse({
       ...row,
       waste_processed: Number(row.waste_processed),
@@ -67,7 +86,10 @@ export async function POST(request: NextRequest) {
     }, "Indicador salvo com sucesso.", existing.rowCount ? 200 : 201);
   } catch (error: any) {
     if (error instanceof SyntaxError) return errorResponse("Corpo da requisição inválido.", 400);
-    console.error("Indicators POST error:", error);
+    logger.error("Indicators POST error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao salvar indicador.", 500);
   }
 }

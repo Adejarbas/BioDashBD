@@ -1,0 +1,140 @@
+-- ============================================================
+-- BioDash - Schema PostgreSQL (Azure Database for PostgreSQL Flexible Server)
+-- Execute este script no seu banco de dados PostgreSQL
+-- ============================================================
+
+-- Extensão para gerar UUIDs
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- ============================================================
+-- USERS (substitui supabase.auth.users)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- USER_PROFILES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS user_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  name VARCHAR(255),
+  company VARCHAR(255),
+  razao_social VARCHAR(255),
+  cnpj VARCHAR(20),
+  address TEXT,
+  numero INTEGER,
+  city VARCHAR(100),
+  state VARCHAR(50),
+  zip_code VARCHAR(20),
+  phone VARCHAR(30),
+  email VARCHAR(255),
+  avatar_url TEXT,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- BIODIGESTER_INDICATORS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS biodigester_indicators (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  waste_processed NUMERIC DEFAULT 0,
+  energy_generated NUMERIC DEFAULT 0,
+  tax_savings NUMERIC DEFAULT 0,
+  measured_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- MAINTENANCE_SCHEDULES
+-- ============================================================
+CREATE TABLE IF NOT EXISTS maintenance_schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL,
+  priority VARCHAR(50) DEFAULT 'low',
+  status VARCHAR(50) DEFAULT 'pending',
+  scheduled_date TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- MAINTENANCE_INCIDENTS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS maintenance_incidents (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  description TEXT,
+  last_notification_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- BIODIGESTOR_MAPS (Unidades e Localizações)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS biodigestor_maps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  address JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
+-- SENSOR_ALERTS (Histórico de Alertas e Ocorrências)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS sensor_alerts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  biodigester_id UUID REFERENCES biodigestor_maps(id) ON DELETE SET NULL,
+  biodigester_name VARCHAR(255),
+  sensor_id VARCHAR(100),
+  sensor_type VARCHAR(50),
+  reading_value NUMERIC,
+  threshold_value NUMERIC,
+  unit VARCHAR(20),
+  alert_level VARCHAR(50) DEFAULT 'info',
+  message TEXT,
+  status VARCHAR(50) DEFAULT 'active',
+  resolved_at TIMESTAMPTZ,
+  resolution_notes TEXT,
+  maintenance_id UUID REFERENCES maintenance_schedules(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- ACTIVITIES (Log de atividades para o Dashboard)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS activities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(100) NOT NULL,
+  description TEXT NOT NULL,
+  timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE maintenance_incidents ADD COLUMN IF NOT EXISTS user_email VARCHAR(255);
+ALTER TABLE maintenance_incidents ADD COLUMN IF NOT EXISTS resolution_message TEXT;
+ALTER TABLE maintenance_incidents ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';
+
+
+-- ============================================================
+-- Índices para performance
+-- ============================================================
+CREATE INDEX IF NOT EXISTS idx_indicators_user_id ON biodigester_indicators(user_id);
+CREATE INDEX IF NOT EXISTS idx_indicators_measured_at ON biodigester_indicators(measured_at DESC);
+CREATE INDEX IF NOT EXISTS idx_maintenance_schedules_user_id ON maintenance_schedules(user_id);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_id ON sensor_alerts(user_id);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_created_at ON sensor_alerts(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_biodigester ON sensor_alerts(user_id, biodigester_id);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_sensor ON sensor_alerts(user_id, sensor_type);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_level ON sensor_alerts(user_id, alert_level);
+CREATE INDEX IF NOT EXISTS idx_sensor_alerts_user_status ON sensor_alerts(user_id, status);
+CREATE INDEX IF NOT EXISTS idx_activities_user_id ON activities(user_id);
+CREATE INDEX IF NOT EXISTS idx_activities_timestamp ON activities(timestamp DESC);

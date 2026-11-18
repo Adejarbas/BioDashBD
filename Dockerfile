@@ -9,7 +9,7 @@ RUN apk add --no-cache curl
 COPY package*.json ./
 
 # Instala todas as dependências (inclui devDeps para o build TypeScript)
-RUN npm install --legacy-peer-deps
+RUN npm install
 
 # Copia código fonte
 COPY . .

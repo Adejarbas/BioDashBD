@@ -9,7 +9,7 @@ import {
   isValidEmail,
   validateRequiredFields,
 } from "@/lib/api-response";
-const logger = require("@/lib/logger-winston");
+import logger from "@/lib/logger-winston";
 
 export async function POST(req: NextRequest) {
   try {
@@ -73,7 +73,6 @@ export async function POST(req: NextRequest) {
     return response;
   } catch (error: any) {
     logger.error("Login error", { error: error.message });
-    console.error("Login error:", error);
     if (error instanceof SyntaxError) return errorResponse("Invalid request body", 400);
     return errorResponse("An unexpected error occurred", 500);
   }

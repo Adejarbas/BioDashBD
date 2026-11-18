@@ -7,25 +7,45 @@ function normalizeOrigin(origin: string) {
   return origin.endsWith("/") ? origin.slice(0, -1) : origin;
 }
 
-// Origens permitidas: dashboard frontend + mobile frontend
-const ALLOWED_ORIGINS = [
-  process.env.FRONTEND_URL,
-  "http://35.168.73.23",           // EC2 Frontend
-  "http://35.168.73.23:80",        // EC2 Frontend porta 80
-  "http://35.168.73.23:3001",      // EC2 Frontend porta 3001
-  "http://44.196.163.18",          // EC2 Backend
-  "http://44.196.163.18:3003",     // EC2 Backend porta 3003
-  "http://localhost:3001",         // Dev local frontend
-  "http://localhost:8081",         // Expo Web
-  "http://localhost:19006",        // Expo Web (porta legada)
-  "http://127.0.0.1:8081",
-  "http://127.0.0.1:19006",
-  "http://localhost:3003",         // Dev local backend
-].filter(Boolean).map(url => normalizeOrigin(url as string));
+function getAllowedOrigins(): string[] {
+  const envUrls = (process.env.FRONTEND_URL || "")
+    .split(",")
+    .map(u => u.trim())
+    .filter(Boolean);
+
+  const staticOrigins = [
+    ...envUrls,
+    "http://localhost",              // Front web no Docker porta 80
+    "http://localhost:80",
+    "http://localhost:3000",
+    "http://localhost:3001",         // Dev local frontend
+    "http://localhost:8081",         // Expo Web
+    "http://localhost:19006",        // Expo Web (porta legada)
+    "http://127.0.0.1",
+    "http://127.0.0.1:80",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:3001",
+    "http://127.0.0.1:8081",
+    "http://127.0.0.1:19006",
+    "http://localhost:3003",         // Dev local backend
+  ];
+
+  return staticOrigins.map(url => normalizeOrigin(url));
+}
 
 function isAllowedOrigin(origin: string | null): boolean {
   if (!origin) return false;
-  return ALLOWED_ORIGINS.includes(normalizeOrigin(origin));
+  const normalized = normalizeOrigin(origin);
+  const allowed = getAllowedOrigins();
+  if (allowed.includes(normalized)) return true;
+
+  // Permite qualquer localhost ou 127.0.0.1 em qualquer porta
+  if (/^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(normalized)) return true;
+
+  // Permite rede local (192.168.x.x, 10.x.x.x, 172.16-31.x.x) para testes no celular ou máquinas na mesma rede
+  if (/^https?:\/\/(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(normalized)) return true;
+
+  return false;
 }
 
 export async function middleware(req: NextRequest) {
@@ -36,7 +56,7 @@ export async function middleware(req: NextRequest) {
     const resPre = new NextResponse(null, { status: 204 });
     if (origin && isAllowedOrigin(origin)) {
       resPre.headers.set("Access-Control-Allow-Origin", normalizeOrigin(origin));
-      resPre.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+      resPre.headers.set("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
       resPre.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization, Cookie");
       resPre.headers.set("Access-Control-Allow-Credentials", "true");
       resPre.headers.set("Vary", "Origin");

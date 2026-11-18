@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import pool from "@/lib/postgres/client";
 import { getTokenFromCookieHeader } from "@/lib/auth/jwt";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,9 +39,18 @@ export async function GET(request: NextRequest) {
       taxSavings: Number(row.tax_savings) || 0,
     };
 
+    logger.info("Dashboard indicators retrieved", {
+      userId: userId || "anonymous",
+      energyGenerated: dashboardData.energyGenerated,
+      wasteProcessed: dashboardData.wasteProcessed,
+      taxSavings: dashboardData.taxSavings,
+    });
+
     return successResponse(dashboardData, "Dashboard indicators retrieved successfully");
   } catch (error: any) {
-    console.error("Error fetching dashboard indicators:", error);
+    logger.error("Error fetching dashboard indicators", {
+      error: error?.message || String(error),
+    });
     return errorResponse("Failed to fetch indicators", 500);
   }
 }

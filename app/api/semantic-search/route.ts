@@ -5,6 +5,7 @@ import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { getUserMarkers } from "@/lib/chatbot-data";
 import { AiServiceError, requestAi } from "@/lib/ai-service";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 export async function POST(request: NextRequest) {
   const user = getTokenFromRequest(request);
@@ -21,10 +22,21 @@ export async function POST(request: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, markers }),
     });
+
+    logger.info("Semantic search realizada", {
+      userId: user.id,
+      query,
+      markersEvaluated: markers.length,
+      resultsCount: Array.isArray(result?.results) ? result.results.length : 0,
+    });
+
     return successResponse(result);
   } catch (error: any) {
     if (error instanceof AiServiceError) return errorResponse(error.message, error.status);
-    console.error("Semantic search route error:", error);
+    logger.error("Erro na busca semântica", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Não foi possível realizar a busca.", 500);
   }
 }

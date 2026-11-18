@@ -6,7 +6,7 @@ import {
   errorResponse,
   validationErrorResponse,
 } from '@/lib/api-response';
-const logger = require("@/lib/logger-winston");
+import logger from "@/lib/logger-winston";
 
 const env = (typeof globalThis !== "undefined" && (globalThis as any).process && (globalThis as any).process.env)
   ? (globalThis as any).process.env
@@ -67,7 +67,6 @@ export async function POST(req: NextRequest) {
     return successResponse({ url: session.url }, 'Checkout session created successfully');
   } catch (error: any) {
     logger.error("Stripe checkout session error", { error: error.message, stack: error.stack });
-    console.error('Stripe checkout session error:', error);
     if (error instanceof SyntaxError) {
       return errorResponse('Invalid request body', 400);
     }

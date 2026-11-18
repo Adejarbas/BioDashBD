@@ -1,8 +1,9 @@
 /**
- * Pool compartilhado do PostgreSQL (AWS RDS)
+ * Pool compartilhado do PostgreSQL (Azure Database for PostgreSQL Flexible Server)
  * Importar este módulo em todas as rotas que precisam de DB.
  */
 import { Pool } from 'pg';
+import logger from "@/lib/logger-winston";
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
@@ -13,7 +14,7 @@ const pool = new Pool({
 });
 
 pool.on('error', (err) => {
-  console.error('🔴 PostgreSQL pool error (BioDashBD):', err.message);
+  logger.error('PostgreSQL pool error (BioDashBD)', { error: err.message });
 });
 
 export default pool;

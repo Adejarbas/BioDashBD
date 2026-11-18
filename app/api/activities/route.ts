@@ -2,6 +2,7 @@ import { type NextRequest } from "next/server";
 import pool from "@/lib/postgres/client";
 import { getTokenFromCookieHeader } from "@/lib/auth/jwt";
 import { successResponse, unauthorizedResponse, errorResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 function formatTimestamp(timestamp: string): string {
   const now = new Date();
@@ -54,12 +55,17 @@ export async function GET(request: NextRequest) {
       timestamp: formatTimestamp(activity.timestamp),
     }));
 
+    logger.info("Activities retrieved", {
+      userId: payload.id,
+      count: formattedActivities.length,
+    });
+
     return successResponse(
       { activities: formattedActivities, total: formattedActivities.length },
       "Activities retrieved successfully"
     );
   } catch (error: any) {
-    console.error("Error fetching activities:", error);
+    logger.error("Error fetching activities", { error: error?.message || String(error) });
     return errorResponse("Failed to fetch activities", 500);
   }
 }
@@ -83,12 +89,18 @@ export async function POST(request: NextRequest) {
       [payload.id, type.trim(), description.trim()]
     );
 
+    logger.info("Activity added", {
+      userId: payload.id,
+      activityId: rows[0]?.id,
+      type: type.trim(),
+    });
+
     return successResponse(
       { ...rows[0], timestamp: formatTimestamp(rows[0].timestamp) },
       "Activity added successfully"
     );
   } catch (error: any) {
-    console.error("Error adding activity:", error);
+    logger.error("Error adding activity", { error: error?.message || String(error) });
     if (error instanceof SyntaxError) return errorResponse("Invalid request body", 400);
     return errorResponse("Failed to add activity", 500);
   }

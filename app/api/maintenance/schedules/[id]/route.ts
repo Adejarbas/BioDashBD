@@ -4,6 +4,7 @@ import { NextRequest } from "next/server";
 import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 const statuses = new Set(["pending", "in_progress", "completed", "cancelled"]);
 
@@ -23,10 +24,18 @@ export async function PUT(
       [body.status, id, user.id]
     );
     if (!rows.length) return errorResponse("Manutenção não encontrada.", 404);
+    logger.info("Maintenance schedule status updated", {
+      userId: user.id,
+      scheduleId: id,
+      status: body.status,
+    });
     return successResponse(rows[0], "Manutenção atualizada com sucesso.");
   } catch (error: any) {
     if (error instanceof SyntaxError) return errorResponse("Corpo da requisição inválido.", 400);
-    console.error("Maintenance schedules PUT error:", error);
+    logger.error("Maintenance schedules PUT error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao atualizar manutenção.", 500);
   }
 }
@@ -44,9 +53,16 @@ export async function DELETE(
       [id, user.id]
     );
     if (!result.rowCount) return errorResponse("Manutenção não encontrada.", 404);
+    logger.info("Maintenance schedule deleted", {
+      userId: user.id,
+      scheduleId: id,
+    });
     return successResponse(undefined, "Manutenção removida com sucesso.");
-  } catch (error) {
-    console.error("Maintenance schedules DELETE error:", error);
+  } catch (error: any) {
+    logger.error("Maintenance schedules DELETE error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao remover manutenção.", 500);
   }
 }

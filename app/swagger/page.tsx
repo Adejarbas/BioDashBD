@@ -1,21 +1,49 @@
 "use client"
 
-import SwaggerUI from "swagger-ui-react"
-// inject Swagger UI stylesheet only on the client (avoids importing global CSS in App Router)
-if (typeof window !== "undefined") {
-  const href = "https://unpkg.com/swagger-ui-dist/swagger-ui.css";
-  if (!document.querySelector(`link[href="${href}"]`)) {
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
+import { useEffect } from "react"
+
+declare global {
+  interface Window {
+    SwaggerUIBundle?: (config: { url: string; dom_id: string }) => void
   }
 }
 
+const SWAGGER_CSS_URL = "https://unpkg.com/swagger-ui-dist@5/swagger-ui.css"
+const SWAGGER_JS_URL = "https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"
+
 export default function SwaggerPage() {
-  return (
-    <div style={{ height: "100vh" }}>
-      <SwaggerUI url="/api/swagger" />
-    </div>
-  )
+  useEffect(() => {
+    if (!document.querySelector(`link[href="${SWAGGER_CSS_URL}"]`)) {
+      const link = document.createElement("link")
+      link.rel = "stylesheet"
+      link.href = SWAGGER_CSS_URL
+      document.head.appendChild(link)
+    }
+
+    const initSwagger = () => {
+      if (window.SwaggerUIBundle) {
+        window.SwaggerUIBundle({
+          url: "/api/swagger",
+          dom_id: "#swagger-ui",
+        })
+      }
+    }
+
+    const existingScript = document.querySelector<HTMLScriptElement>(
+      `script[src="${SWAGGER_JS_URL}"]`
+    )
+
+    if (existingScript) {
+      initSwagger()
+      return
+    }
+
+    const script = document.createElement("script")
+    script.src = SWAGGER_JS_URL
+    script.async = true
+    script.onload = initSwagger
+    document.body.appendChild(script)
+  }, [])
+
+  return <div id="swagger-ui" style={{ minHeight: "100vh" }} />
 }

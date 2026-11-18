@@ -5,6 +5,7 @@ import pool from "@/lib/postgres/client";
 import { getTokenFromRequest } from "@/lib/auth/jwt";
 import { getUserMarkers, normalizeMarker } from "@/lib/chatbot-data";
 import { errorResponse, successResponse, unauthorizedResponse } from "@/lib/api-response";
+import logger from "@/lib/logger-winston";
 
 function markerAddress(body: any) {
   const nested = body?.address && typeof body.address === "object" ? body.address : {};
@@ -21,9 +22,17 @@ export async function GET(request: NextRequest) {
   const user = getTokenFromRequest(request);
   if (!user) return unauthorizedResponse("Sessão inválida ou expirada.");
   try {
-    return successResponse(await getUserMarkers(user.id));
-  } catch (error) {
-    console.error("Markers GET error:", error);
+    const markers = await getUserMarkers(user.id);
+    logger.info("Biodigester markers retrieved", {
+      userId: user.id,
+      count: markers.length,
+    });
+    return successResponse(markers);
+  } catch (error: any) {
+    logger.error("Markers GET error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao buscar biodigestores.", 500);
   }
 }
@@ -55,10 +64,23 @@ export async function POST(request: NextRequest) {
         [user.id, address]
       );
     }
-    return successResponse(normalizeMarker(result.rows[0]), "Biodigestor salvo com sucesso.", id ? 200 : 201);
+
+    const saved = normalizeMarker(result.rows[0]);
+    logger.info(id ? "Biodigester marker updated" : "Biodigester marker created", {
+      userId: user.id,
+      markerId: saved.id,
+      title: address.title,
+      latitude: address.latitude,
+      longitude: address.longitude,
+    });
+
+    return successResponse(saved, "Biodigestor salvo com sucesso.", id ? 200 : 201);
   } catch (error: any) {
     if (error instanceof SyntaxError) return errorResponse("Corpo da requisição inválido.", 400);
-    console.error("Markers POST error:", error);
+    logger.error("Markers POST error", {
+      userId: user.id,
+      error: error?.message || String(error),
+    });
     return errorResponse("Erro ao salvar biodigestor.", 500);
   }
 }
