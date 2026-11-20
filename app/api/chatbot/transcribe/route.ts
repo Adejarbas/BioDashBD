@@ -76,9 +76,37 @@ export async function POST(request: NextRequest) {
       textLength: transcription?.text?.length || 0,
     });
 
-    return successResponse(transcription);
+    const normalizedText = transcription?.text?.trim() || "";
+    if (!normalizedText) {
+      logger.warn("Transcrição concluída sem fala reconhecida", {
+        userId: user.id,
+        audioDurationSec: transcription?.duration,
+      });
+      return successResponse({
+        ...transcription,
+        text: "",
+        status: "no-recognized" as const,
+      });
+    }
+
+    return successResponse({
+      ...transcription,
+      text: normalizedText,
+      status: "success" as const,
+    });
   } catch (error: any) {
-    if (error instanceof AiServiceError) return errorResponse(error.message, error.status);
+    if (error instanceof AiServiceError) {
+      if (error.status === 422) {
+        logger.warn("Nenhuma fala reconhecida pelo serviço de IA", {
+          userId: user.id,
+        });
+        return successResponse({
+          text: "",
+          status: "no-recognized" as const,
+        });
+      }
+      return errorResponse(error.message, error.status);
+    }
     logger.error("Erro na rota de transcrição de áudio", {
       userId: user.id,
       error: error?.message || String(error),
