@@ -44,7 +44,10 @@ jobs:
         run: npm run typecheck
 
       - name: Executar testes unitários
-        run: npm test
+        run: npm run test:unit
+
+      - name: Executar testes de integração (APIs, Serviços e IoT)
+        run: npm run test:integration
 
   # ============================================================================
   # Job 2: Validação de Conventional Commits (Quality Gate)
